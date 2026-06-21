@@ -490,7 +490,7 @@ select option{background:var(--bg-800)}
   .qn-partido-cell{white-space:normal!important;min-width:160px;max-width:160px;line-height:1.3}
   .qn-detail-td table{font-size:10px}
   .qn-detail-td table td,.qn-detail-td table th{padding:4px 5px}
-  .qn-detail-td table .qn-nombre-col{min-width:170px;width:170px}
+  .qn-detail-td table .qn-nombre-col{min-width:170px}
   /* Columnas Pronóstico / Resultado — compactas en móvil */
   .mob-hide-label{display:none!important}
   .mob-short-label{display:inline!important}
@@ -3679,9 +3679,9 @@ function qnRenderMatchTable(matchName, data, targetEl){
   hdrs.forEach(function(h,i){
     var style=i===ptsIdx?'color:var(--gold);font-weight:800':i===predIdx?'color:var(--blue-400)':'';
     var cls=i===userIdx?'qn-hide-mob':'';
-    var wStyle=i===nombreIdx?'min-width:170px;width:170px':i===ptsIdx?'width:36px;max-width:36px;text-align:center':i===resIdx?'width:40px;max-width:40px;text-align:center':'';
+    var wStyle=i===nombreIdx?'min-width:170px':i===ptsIdx?'width:36px;max-width:36px;text-align:center':i===resIdx?'width:40px;max-width:40px;text-align:center':'';
     var combinedStyle=[wStyle,style].filter(Boolean).join(';');
-    var hLabel=i===predIdx?'<span class="mob-hide-label">'+h+'</span><span class="mob-short-label">Pron.</span>':i===acumIdx?'Σ':h;
+    var hLabel=i===predIdx?'<span title="'+h+'">Pron.</span>':i===acumIdx?'Σ':h;
     html+='<th'+(cls?' class="'+cls+'"':'')+(combinedStyle?' style="'+combinedStyle+'"':'')+'>'+hLabel+'</th>';
   });
   html+='</tr></thead><tbody>';
@@ -3690,7 +3690,7 @@ function qnRenderMatchTable(matchName, data, targetEl){
     html+='<tr'+(isMe?' style="background:rgba(245,158,11,.1)"':'')+'>';
     row.forEach(function(cell,i){
       var mobC=i===userIdx?' class="qn-hide-mob"':'';
-      var wStyle=i===nombreIdx?'min-width:160px;width:160px;':'';
+      var wStyle=i===nombreIdx?'min-width:160px;':'';
       if(i===ptsIdx){
         html+='<td class="qn-pts" style="font-size:11px">'+cell+'</td>';
       } else if(i===acumIdx&&isMe&&myTotalPts!==null){
@@ -4240,9 +4240,9 @@ function renderQnTable(data,pages){
     if(i===lastIdx) html+='<th'+mobHide+' style="text-align:center">&#x2139;</th>';
     else if(i===ptsIdx) html+='<th style="text-align:left;width:28px;max-width:28px;padding-left:0"><span class="mob-hide-label">'+h+'</span><span class="mob-short-label">PTS.</span> <span style="color:var(--gold);font-weight:800">('+totalPts+')</span></th>';
     else if(i===0) html+='<th style="width:36px;text-align:center">'+h+'</th>';
-    else if(i===nameIdx&&i!==horarioIdx&&i!==lastIdx) html+='<th style="min-width:160px;width:160px">'+h+'</th>';
+    else if(i===nameIdx&&i!==horarioIdx&&i!==lastIdx) html+='<th style="min-width:160px">'+h+'</th>';
     else if(i===partidoIdx) html+='<th style="min-width:170px;white-space:nowrap">'+h+'</th>';
-    else if(i===pronosticoIdx) html+='<th style="text-align:center;padding:2px 0px;width:30px;max-width:30px"><span class="mob-hide-label">'+h+'</span><span class="mob-short-label">Pron.</span></th>';
+    else if(i===pronosticoIdx) html+='<th style="text-align:center;padding:2px 0px;width:30px;max-width:30px" title="'+h+'">Pron.</th>';
     else if(i===resultadoIdx) html+='<th style="text-align:center;padding:5px 1px;width:36px;max-width:36px"><span class="mob-hide-label">'+h+'</span><span class="mob-short-label">Res.</span></th>';
     else if(isMatch) html+='<th'+mobHide+' style="white-space:nowrap">'+h+'</th>';
     else html+='<th'+mobHide+'>'+h+'</th>';
@@ -4283,7 +4283,7 @@ function renderQnTable(data,pages){
       } else if(ci===horarioIdx){
         html+='<td class="qn-hide-mob">'+cell+'</td>';
       } else if(ci===nameIdx&&ci!==horarioIdx){
-        html+='<td style="min-width:160px;width:160px">'+cell+'</td>';
+        html+='<td style="min-width:160px">'+cell+'</td>';
       } else {
         html+='<td>'+cell+'</td>';
       }
