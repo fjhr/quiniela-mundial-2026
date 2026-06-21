@@ -3679,7 +3679,7 @@ function qnRenderMatchTable(matchName, data, targetEl){
   hdrs.forEach(function(h,i){
     var style=i===ptsIdx?'color:var(--gold);font-weight:800':i===predIdx?'color:var(--blue-400)':'';
     var cls=i===userIdx?'qn-hide-mob':'';
-    var wStyle=i===nombreIdx?'min-width:170px':i===ptsIdx?'width:36px;max-width:36px;text-align:center':i===resIdx?'width:40px;max-width:40px;text-align:center':'';
+    var wStyle=i===nombreIdx?'min-width:170px':i===ptsIdx?'width:44px;text-align:center;white-space:nowrap':i===resIdx?'width:40px;max-width:40px;text-align:center':'';
     var combinedStyle=[wStyle,style].filter(Boolean).join(';');
     var hLabel=i===predIdx?'<span title="'+h+'">Pron.</span>':i===acumIdx?'Σ':h;
     html+='<th'+(cls?' class="'+cls+'"':'')+(combinedStyle?' style="'+combinedStyle+'"':'')+'>'+hLabel+'</th>';
@@ -3692,7 +3692,7 @@ function qnRenderMatchTable(matchName, data, targetEl){
       var mobC=i===userIdx?' class="qn-hide-mob"':'';
       var wStyle=i===nombreIdx?'min-width:160px;':'';
       if(i===ptsIdx){
-        html+='<td class="qn-pts" style="font-size:11px">'+cell+'</td>';
+        html+='<td class="qn-pts" style="font-size:11px;white-space:nowrap;text-align:center;min-width:44px">'+cell+'</td>';
       } else if(i===acumIdx&&isMe&&myTotalPts!==null){
         html+='<td style="font-weight:800;color:var(--gold);font-size:12px">'+myTotalPts+'</td>';
       } else if(i===predIdx){
