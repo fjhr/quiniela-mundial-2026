@@ -1,0 +1,33 @@
+# Backups y versiones anteriores
+bk/
+*.pdf
+tex/
+*.tex
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+
+# Copias del portal
+*copia*.html
+mundial2026_portal_v2.html
+mundial2026_portal_v3.html
+mundial2026_portal_v4.html
+mundial2026_portal_v4*.html
+mundial2026_portal_v5.html
+mundial2026_portal_v5*.html
+mundial2026_portal_v6 - *.html
+mundial2026_mobile.html
+mundial2026_analisis.*
+
+# Archivos del worker de respaldo
+gp-proxy-worker - *.js
+
+# Skill y herramientas internas
+mundial2026-predictor.skill/
+.claude/
+
+# Python
+__pycache__/
+*.pyc
