@@ -3594,8 +3594,10 @@ function qnParseMatchPreds(html){
 function qnRenderMatchTable(matchName, data, targetEl){
   var hdrs=data.headers;
   var ptsIdx=-1, predIdx=-1, userIdx=-1, acumIdx=-1, nombreIdx=-1;
+  var resIdx=-1;
   hdrs.forEach(function(h,i){
     var hn=h.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+    if(resIdx<0&&/resulta/.test(hn)) resIdx=i;
     var reAcum=/acum|acumulad/;
     var rePts=/punt|ptos|pts/;
     var rePred=/pron|pred|marcad/;
@@ -3674,7 +3676,17 @@ function qnRenderMatchTable(matchName, data, targetEl){
       if(ni!==ptsIdx&&ni!==acumIdx&&ni!==predIdx&&ni!==userIdx){nombreIdx=ni;break;}
     }
   }
-  hdrs.forEach(function(h,i){
+  /* Orden: Nombre | Res. | Pts | Pron. | resto | UserIdx al final */
+  var subColOrder=[];
+  [nombreIdx,resIdx,ptsIdx,predIdx].forEach(function(idx){
+    if(idx>=0&&subColOrder.indexOf(idx)<0) subColOrder.push(idx);
+  });
+  hdrs.forEach(function(_,i){if(subColOrder.indexOf(i)<0&&i!==userIdx) subColOrder.push(i);});
+  if(userIdx>=0&&subColOrder.indexOf(userIdx)<0) subColOrder.push(userIdx);
+  hdrs.forEach(function(_,i){if(subColOrder.indexOf(i)<0) subColOrder.push(i);});
+
+  subColOrder.forEach(function(i){
+    var h=hdrs[i];
     var style=i===ptsIdx?'color:var(--gold);font-weight:800':i===predIdx?'color:var(--blue-400)':'';
     var cls=i===userIdx?'qn-hide-mob':'';
     var wStyle=i===nombreIdx?'min-width:180px;width:180px':'';
@@ -3686,7 +3698,8 @@ function qnRenderMatchTable(matchName, data, targetEl){
   data.rows.forEach(function(row,ri){
     var isMe=ri===data.myRowIdx;
     html+='<tr'+(isMe?' style="background:rgba(245,158,11,.1)"':'')+'>';
-    row.forEach(function(cell,i){
+    subColOrder.forEach(function(i){
+      var cell=row[i]!=null?row[i]:'';
       var mobC=i===userIdx?' class="qn-hide-mob"':'';
       var wStyle=i===nombreIdx?'min-width:160px;width:160px;':'';
       if(i===ptsIdx){
@@ -4196,6 +4209,12 @@ function renderQnTable(data,pages){
     if(horarioIdx<0&&/hora|fecha|date|time|sched|jornada/.test(hn)) horarioIdx=i;
   });
   QN_META={ptsIdx:ptsIdx,lastIdx:data.headers.length-1,nameIdx:nameIdx,partidoIdx:partidoIdx,pronosticoIdx:pronosticoIdx};
+  /* Orden de columnas: Nombre | Partido | Res. | Pts | Pron. | resto */
+  var colOrder=[];
+  [0,nameIdx,partidoIdx,resultadoIdx,ptsIdx,pronosticoIdx].forEach(function(idx){
+    if(idx>=0&&colOrder.indexOf(idx)<0) colOrder.push(idx);
+  });
+  data.headers.forEach(function(_,i){if(colOrder.indexOf(i)<0) colOrder.push(i);});
 
   /* Extraer equipos del texto de una celda "México vs Argentina" */
   function teamsFromCell(txt){
@@ -4232,7 +4251,8 @@ function renderQnTable(data,pages){
   /* Tabla */
   html+='<div class="card" style="overflow-x:auto"><table class="qn-table"><thead><tr>';
   var lastIdx=data.headers.length-1;
-  data.headers.forEach(function(h,i){
+  colOrder.forEach(function(i){
+    var h=data.headers[i];
     var isMatch=i!==0&&i!==nameIdx&&i!==ptsIdx&&i!==lastIdx;
     var mobHide=(i===lastIdx||i===horarioIdx)?' class="qn-hide-mob"':'';
     if(i===lastIdx) html+='<th'+mobHide+' style="text-align:center">&#x2139;</th>';
@@ -4250,7 +4270,8 @@ function renderQnTable(data,pages){
   data.rows.forEach(function(row,ri){
     var posNum=parseInt(row[0])||ri+1;
     html+='<tr>';
-    row.forEach(function(cell,ci){
+    colOrder.forEach(function(ci){
+      var cell=row[ci]!=null?row[ci]:'';
       if(ci===0){
         html+='<td class="qn-pos">'+posNum+'</td>';
       } else if(ci===ptsIdx&&ci!==lastIdx){
@@ -4291,7 +4312,7 @@ function renderQnTable(data,pages){
 
   /* Fila total */
   html+='<tr style="border-top:2px solid var(--bg-500);background:var(--bg-700)">';
-  data.headers.forEach(function(h,i){
+  colOrder.forEach(function(i){
     var tcls=(i===lastIdx||i===horarioIdx)?' class="qn-hide-mob"':'';
     if(i===0)html+='<td style="text-align:center;font-size:10px;color:var(--text-500)">Σ</td>';
     else if(i===ptsIdx)html+='<td style="font-weight:700;color:var(--gold);font-size:13px">'+totalPts+'</td>';
