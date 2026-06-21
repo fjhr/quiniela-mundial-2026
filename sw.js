@@ -1,4 +1,4 @@
-var CACHE = 'quiniela2026-v4';
+var CACHE = 'quiniela2026-v5';
 var ASSETS = [
   './index.html',
   './manifest.json',
