@@ -1,6 +1,6 @@
-var CACHE = 'quiniela2026-v1';
+var CACHE = 'quiniela2026-v2';
 var ASSETS = [
-  './mundial2026_portal_v6.html',
+  './index.html',
   './manifest.json',
   './icon.svg',
   'https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css',

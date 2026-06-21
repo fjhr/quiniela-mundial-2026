@@ -3594,7 +3594,7 @@ function qnRenderMatchTable(matchName, data, targetEl){
     var rePts=/punt|ptos|pts/;
     var rePred=/pron|pred|marcad/;
     var reUser=/usuar|user|partic|jugad|apodo/;
-    var reNombre=/^nombre$/;
+    var reNombre=/nombre|participan|jugad|apodo|player|name/;
     if(acumIdx<0&&reAcum.test(hn)) acumIdx=i;
     if(ptsIdx<0&&i!==acumIdx&&rePts.test(hn)) ptsIdx=i;
     if(predIdx<0&&rePred.test(hn)) predIdx=i;
@@ -3662,10 +3662,18 @@ function qnRenderMatchTable(matchName, data, targetEl){
       +'<span style="font-size:11px;color:var(--text-500)"><i class="ti ti-users"></i> '+data.rows.length+' participantes</span>'
     +'</div>'
     +'<table class="qn-table" style="font-size:11px"><thead><tr>';
+  /* Si no se detectó columna de nombre, usar la primera que no sea especial */
+  if(nombreIdx<0){
+    for(var ni=0;ni<hdrs.length;ni++){
+      if(ni!==ptsIdx&&ni!==acumIdx&&ni!==predIdx&&ni!==userIdx){nombreIdx=ni;break;}
+    }
+  }
   hdrs.forEach(function(h,i){
     var style=i===ptsIdx?'color:var(--gold);font-weight:800':i===predIdx?'color:var(--blue-400)':'';
-    var cls=i===userIdx?'qn-hide-mob':i===nombreIdx?'qn-nombre-col':'';
-    html+='<th'+(cls?' class="'+cls+'"':'')+(style?' style="'+style+'"':'')+'>'+h+'</th>';
+    var cls=i===userIdx?'qn-hide-mob':'';
+    var wStyle=i===nombreIdx?'min-width:160px;width:160px':'';
+    var combinedStyle=[wStyle,style].filter(Boolean).join(';');
+    html+='<th'+(cls?' class="'+cls+'"':'')+(combinedStyle?' style="'+combinedStyle+'"':'')+'>'+h+'</th>';
   });
   html+='</tr></thead><tbody>';
   data.rows.forEach(function(row,ri){
@@ -3673,6 +3681,7 @@ function qnRenderMatchTable(matchName, data, targetEl){
     html+='<tr'+(isMe?' style="background:rgba(245,158,11,.1)"':'')+'>';
     row.forEach(function(cell,i){
       var mobC=i===userIdx?' class="qn-hide-mob"':'';
+      var wStyle=i===nombreIdx?'min-width:160px;width:160px;':'';
       if(i===ptsIdx){
         html+='<td class="qn-pts" style="font-size:11px">'+cell+'</td>';
       } else if(i===acumIdx&&isMe&&myTotalPts!==null){
@@ -3681,10 +3690,11 @@ function qnRenderMatchTable(matchName, data, targetEl){
         html+='<td style="font-weight:700;color:'+(isMe?'var(--gold)':'var(--blue-400)')+'">'+(cell+(isMe?' 👤':''))+'</td>';
       } else if(i===nombreIdx){
         var nameContent=isMe?'<i class="ti ti-user" style="font-size:11px;vertical-align:middle"></i> Yo':cell;
-        var nameStyle=isMe?'color:var(--gold);font-weight:700':'';
-        html+='<td class="qn-nombre-col"'+(nameStyle?' style="'+nameStyle+'"':'')+'>'+nameContent+'</td>';
+        var nameStyle=wStyle+(isMe?'color:var(--gold);font-weight:700':'');
+        html+='<td'+(nameStyle?' style="'+nameStyle+'"':'')+'>'+nameContent+'</td>';
       } else {
-        html+='<td'+mobC+(isMe?' style="color:var(--gold);font-weight:600"':'')+'>'+cell+'</td>';
+        var extraStyle=wStyle+(isMe?'color:var(--gold);font-weight:600':'');
+        html+='<td'+mobC+(extraStyle?' style="'+extraStyle+'"':'')+'>'+cell+'</td>';
       }
     });
     html+='</tr>';
