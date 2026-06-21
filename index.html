@@ -487,7 +487,7 @@ select option{background:var(--bg-800)}
   .qn-table th,.qn-table td{padding:5px 5px}
   .qn-table th:first-child,.qn-table td:first-child{width:22px;min-width:22px;padding:5px 3px}
   .qn-pts{font-size:12px}
-  .qn-partido-cell{white-space:normal!important;max-width:110px;line-height:1.3}
+  .qn-partido-cell{white-space:normal!important;min-width:160px;max-width:160px;line-height:1.3}
   .qn-detail-td table{font-size:10px}
   .qn-detail-td table td,.qn-detail-td table th{padding:4px 5px}
   .qn-detail-td table .qn-nombre-col{min-width:160px;width:160px}
@@ -4231,6 +4231,7 @@ function renderQnTable(data,pages){
     else if(i===ptsIdx) html+='<th>'+h+' <span style="color:var(--gold);font-weight:800">('+totalPts+')</span></th>';
     else if(i===0) html+='<th style="width:36px;text-align:center">'+h+'</th>';
     else if(i===nameIdx&&i!==horarioIdx&&i!==lastIdx) html+='<th style="min-width:160px;width:160px">'+h+'</th>';
+    else if(i===partidoIdx) html+='<th style="min-width:160px;white-space:nowrap">'+h+'</th>';
     else if(isMatch) html+='<th'+mobHide+' style="white-space:nowrap">'+h+'</th>';
     else html+='<th'+mobHide+'>'+h+'</th>';
   });
