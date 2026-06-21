@@ -4241,9 +4241,9 @@ function renderQnTable(data,pages){
     else if(i===ptsIdx) html+='<th>'+h+' <span style="color:var(--gold);font-weight:800">('+totalPts+')</span></th>';
     else if(i===0) html+='<th style="width:36px;text-align:center">'+h+'</th>';
     else if(i===nameIdx&&i!==horarioIdx&&i!==lastIdx) html+='<th style="min-width:160px;width:160px">'+h+'</th>';
-    else if(i===partidoIdx) html+='<th style="min-width:160px;white-space:nowrap">'+h+'</th>';
-    else if(i===pronosticoIdx) html+='<th style="text-align:center;padding:5px 4px;width:46px;max-width:46px"><span class="mob-hide-label">'+h+'</span><span class="mob-short-label">Pron.</span></th>';
-    else if(i===resultadoIdx) html+='<th style="text-align:center;padding:5px 4px;width:40px;max-width:40px"><span class="mob-hide-label">'+h+'</span><span class="mob-short-label">Res.</span></th>';
+    else if(i===partidoIdx) html+='<th style="min-width:180px;white-space:nowrap">'+h+'</th>';
+    else if(i===pronosticoIdx) html+='<th style="text-align:center;padding:5px 1px;width:40px;max-width:40px"><span class="mob-hide-label">'+h+'</span><span class="mob-short-label">Pron.</span></th>';
+    else if(i===resultadoIdx) html+='<th style="text-align:center;padding:5px 1px;width:36px;max-width:36px"><span class="mob-hide-label">'+h+'</span><span class="mob-short-label">Res.</span></th>';
     else if(isMatch) html+='<th'+mobHide+' style="white-space:nowrap">'+h+'</th>';
     else html+='<th'+mobHide+'>'+h+'</th>';
   });
@@ -4277,9 +4277,9 @@ function renderQnTable(data,pages){
           html+='<td style="color:var(--text-600);text-align:center">'+cell+'</td>';
         }
       } else if(ci===pronosticoIdx){
-        html+='<td style="white-space:nowrap;text-align:center;max-width:46px;overflow:hidden">'+cell+'</td>';
+        html+='<td style="white-space:nowrap;text-align:center;padding:5px 1px;max-width:40px;overflow:hidden">'+cell+'</td>';
       } else if(ci===resultadoIdx){
-        html+='<td style="white-space:nowrap;text-align:center;max-width:40px;overflow:hidden">'+cell+'</td>';
+        html+='<td style="white-space:nowrap;text-align:center;padding:5px 1px;max-width:36px;overflow:hidden">'+cell+'</td>';
       } else if(ci===horarioIdx){
         html+='<td class="qn-hide-mob">'+cell+'</td>';
       } else if(ci===nameIdx&&ci!==horarioIdx){
