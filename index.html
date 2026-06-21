@@ -4180,11 +4180,12 @@ function renderQnTable(data,pages){
     if(ptsIdx<0) ptsIdx=data.headers.length-1;
   }
   /* Detectar columna "Partido", "Pronóstico" y "Horario" */
-  var partidoIdx=-1, pronosticoIdx=-1, horarioIdx=-1;
+  var partidoIdx=-1, pronosticoIdx=-1, resultadoIdx=-1, horarioIdx=-1;
   data.headers.forEach(function(h,i){
     var hn=h.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     if(partidoIdx<0&&/partido|match|equipo|vs\b/.test(hn)) partidoIdx=i;
-    if(pronosticoIdx<0&&/pron|pred|result|gol|marcad/.test(hn)) pronosticoIdx=i;
+    if(resultadoIdx<0&&/resulta/.test(hn)) resultadoIdx=i;
+    if(pronosticoIdx<0&&/pron|pred|marcad|gol/.test(hn)) pronosticoIdx=i;
     if(horarioIdx<0&&/hora|fecha|date|time|sched|jornada/.test(hn)) horarioIdx=i;
   });
   QN_META={ptsIdx:ptsIdx,lastIdx:data.headers.length-1,nameIdx:nameIdx,partidoIdx:partidoIdx,pronosticoIdx:pronosticoIdx};
@@ -4264,6 +4265,10 @@ function renderQnTable(data,pages){
         } else {
           html+='<td style="color:var(--text-600);text-align:center">'+cell+'</td>';
         }
+      } else if(ci===pronosticoIdx){
+        html+='<td style="white-space:nowrap;text-align:center">'+cell+'</td>';
+      } else if(ci===resultadoIdx){
+        html+='<td style="white-space:nowrap;text-align:center">'+cell+'</td>';
       } else if(ci===horarioIdx){
         html+='<td class="qn-hide-mob">'+cell+'</td>';
       } else if(ci===nameIdx&&ci!==horarioIdx){
