@@ -1,10 +1,8 @@
-var CACHE = 'quiniela2026-v3';
+var CACHE = 'quiniela2026-v4';
 var ASSETS = [
   './index.html',
   './manifest.json',
-  './icon.svg',
-  'https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap'
+  './icon.svg'
 ];
 
 self.addEventListener('install', function(e){
@@ -24,22 +22,32 @@ self.addEventListener('activate', function(e){
 });
 
 self.addEventListener('fetch', function(e){
-  /* Peticiones al proxy de GolPredictor → siempre red (datos en vivo) */
-  if(e.request.url.includes('workers.dev')||e.request.url.includes('golpredictor')){
-    e.respondWith(fetch(e.request).catch(function(){
-      return new Response(JSON.stringify({error:'offline'}),{headers:{'Content-Type':'application/json'}});
-    }));
+  var url=e.request.url;
+
+  /* Solo manejar peticiones GET */
+  if(e.request.method!=='GET') return;
+
+  /* Dejar pasar sin interceptar: APIs externas, ESPN, football-data, CDNs de fuentes/íconos */
+  if(url.includes('espn.com')||url.includes('football-data')||
+     url.includes('googleapis.com')||url.includes('jsdelivr.net')||
+     url.includes('golpredictor')||url.includes('workers.dev')||
+     url.includes('gstatic.com')){
     return;
   }
-  /* App shell → cache first, red como fallback */
+
+  /* Solo cachear recursos del mismo origen (archivos propios de la app) */
+  if(!url.startsWith(self.location.origin)) return;
+
   e.respondWith(
     caches.match(e.request).then(function(cached){
       return cached || fetch(e.request).then(function(resp){
-        if(resp&&resp.status===200&&e.request.method==='GET'){
+        if(resp&&resp.status===200){
           var clone=resp.clone();
           caches.open(CACHE).then(function(c){ c.put(e.request,clone); });
         }
         return resp;
+      }).catch(function(){
+        return caches.match('./index.html');
       });
     })
   );
