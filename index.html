@@ -4,13 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mundial FIFA 2026 — Portal Predictivo</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Quiniela 2026">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
 <style>
 :root{
   --bg-950:#020617;--bg-900:#0f172a;--bg-800:#1e293b;--bg-700:#334155;--bg-600:#475569;
-  --text-50:#f8fafc;--text-200:#e2e8f0;--text-400:#94a3b8;--text-600:#475569;
+  --text-50:#f8fafc;--text-200:#e2e8f0;--text-400:#94a3b8;--text-500:#64748b;--text-600:#475569;
   --blue:#2563eb;--blue-400:#60a5fa;--blue-700:#1d4ed8;
   --gold:#f59e0b;--gold-300:#fcd34d;
   --green:#16a34a;--green-400:#4ade80;
@@ -18,6 +25,14 @@
   --sidebar-w:224px;--sidebar-cw:58px;
   --r-sm:6px;--r-md:8px;--r-lg:12px;--r-xl:16px;
   --hdr-h:54px;
+  --pg-hdr-bg:rgba(15,23,42,.95);
+}
+[data-theme="light"]{
+  --bg-950:#ffffff;--bg-900:#f8fafc;--bg-800:#f1f5f9;--bg-700:#e2e8f0;--bg-600:#cbd5e1;
+  --text-50:#0f172a;--text-200:#1e293b;--text-400:#475569;--text-500:#64748b;--text-600:#94a3b8;
+  --blue-400:#2563eb;--gold:#d97706;--gold-300:#f59e0b;
+  --green-400:#16a34a;--red-400:#dc2626;
+  --pg-hdr-bg:rgba(248,250,252,.95);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
@@ -98,16 +113,24 @@ button{touch-action:manipulation}
   padding:1px 6px;border-radius:999px;background:var(--bg-700);color:var(--text-400);
 }
 .nav-btn.active .nbadge{background:rgba(255,255,255,.2);color:#fff}
+#nav-quiniela{background:rgba(99,102,241,.12);color:var(--indigo-300);border:1px solid rgba(99,102,241,.25);font-weight:600}
+#nav-quiniela:hover{background:rgba(99,102,241,.22);color:#a5b4fc}
+#nav-quiniela.active{background:var(--blue);color:#fff;border-color:transparent}
+#nav-cal{background:rgba(37,99,235,.1);color:var(--blue-400);border:1px solid rgba(37,99,235,.2);font-weight:600}
+#nav-cal:hover{background:rgba(37,99,235,.2);color:#93c5fd}
+#nav-cal.active{background:var(--blue);color:#fff;border-color:transparent}
 
 /* Group grid */
 .grp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;padding:3px 8px 6px}
 .gg-btn{
   height:26px;border-radius:var(--r-sm);border:1px solid var(--bg-700);background:none;
   font-size:11px;font-weight:600;color:var(--text-400);cursor:pointer;
-  transition:all .15s;font-family:inherit;
+  transition:all .15s;font-family:inherit;position:relative;
 }
 .gg-btn:hover{background:var(--bg-800);color:var(--text-200)}
 .gg-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.gg-today-dot{position:absolute;top:3px;right:3px;width:5px;height:5px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80,0 0 2px #4ade80;animation:gg-pulse 2s ease-in-out infinite;pointer-events:none}
+@keyframes gg-pulse{0%,100%{opacity:1;box-shadow:0 0 6px #4ade80,0 0 2px #4ade80}50%{opacity:.5;box-shadow:0 0 3px #4ade80}}
 
 /* Sidebar footer */
 .sb-footer{margin-top:auto;padding:12px 14px;border-top:1px solid var(--bg-700);flex-shrink:0}
@@ -121,10 +144,17 @@ button{touch-action:manipulation}
 /* ── PAGE HEADER ── */
 .pg-hdr{
   position:sticky;top:0;z-index:90;height:var(--hdr-h);
-  background:rgba(15,23,42,.95);backdrop-filter:blur(8px);
+  background:var(--pg-hdr-bg);backdrop-filter:blur(8px);
   border-bottom:1px solid var(--bg-700);
   padding:0 20px;display:flex;align-items:center;gap:10px;
 }
+#btn-theme{
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  background:none;border:1px solid var(--bg-700);border-radius:var(--r-md);
+  width:34px;height:34px;cursor:pointer;color:var(--text-400);font-size:16px;
+  transition:all .2s;
+}
+#btn-theme:hover{background:var(--bg-800);color:var(--text-200)}
 #hamburger{
   display:none;background:none;border:1px solid var(--bg-700);
   border-radius:var(--r-md);padding:7px 9px;cursor:pointer;
@@ -450,6 +480,16 @@ select option{background:var(--bg-800)}
 
   /* Match card team names shorter */
   .tn{font-size:11px}
+
+  /* Quiniela table — mobile */
+  .qn-hide-mob{display:none!important}
+  .qn-table{font-size:11px}
+  .qn-table th,.qn-table td{padding:5px 5px}
+  .qn-table th:first-child,.qn-table td:first-child{width:22px;min-width:22px;padding:5px 3px}
+  .qn-pts{font-size:12px}
+  .qn-partido-cell{white-space:normal!important;max-width:110px;line-height:1.3}
+  .qn-detail-td table{font-size:10px}
+  .qn-detail-td table td,.qn-detail-td table th{padding:4px 5px}
 }
 
 /* ══════════════════════════════════════
@@ -457,7 +497,6 @@ select option{background:var(--bg-800)}
 ══════════════════════════════════════ */
 @media(max-width:480px){
   .pg-title{font-size:14px}
-  .pg-title .ti{display:none}
   .stat-grid{grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px}
   .stat-card .svalue{font-size:22px}
   .stat-card .slabel{font-size:9px}
@@ -529,6 +568,9 @@ select option{background:var(--bg-800)}
 .ko-badge.trd{background:rgba(71,85,105,.3);color:#94a3b8}
 .ko-extra{font-size:9px;color:var(--text-500);margin-top:1px}
 /* QUINIELA */
+.qn-tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--text-400);cursor:pointer;padding:8px 16px;font-size:12px;font-weight:600;font-family:inherit;transition:all .2s;display:inline-flex;align-items:center;gap:5px}
+.qn-tab.active{color:var(--blue-400);border-bottom-color:var(--blue-400)}
+.qn-tab:hover:not(.active){color:var(--text-200)}
 .qn-table{width:100%;border-collapse:collapse;font-size:12px}
 .qn-table th{padding:7px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-400);border-bottom:1px solid var(--bg-700)}
 .qn-table td{padding:8px 10px;border-bottom:1px solid var(--bg-800)}
@@ -536,6 +578,7 @@ select option{background:var(--bg-800)}
 .qn-pos{font-weight:800;color:var(--text-300);min-width:28px;text-align:center}
 .qn-gold{color:#f59e0b}.qn-silver{color:#94a3b8}.qn-bronze{color:#b45309}
 .qn-pts{font-weight:800;font-size:14px;color:var(--text-100)}
+.qn-partido-cell{white-space:nowrap}
 .qn-info-wrap{position:relative;display:inline-flex;justify-content:center}
 .qn-info-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(99,102,241,.18);border:1.5px solid rgba(99,102,241,.45);color:var(--indigo-300);font-size:11px;font-weight:800;cursor:pointer;transition:background .15s;line-height:1;padding:0}
 .qn-info-btn:hover,.qn-info-btn.active{background:rgba(99,102,241,.35)}
@@ -569,15 +612,16 @@ select option{background:var(--bg-800)}
 
   <div class="nav-section">
     <div class="nav-label">Torneo</div>
-    <button class="nav-btn active" id="nav-grupos" onclick="navTo('grupos')" title="Fase de Grupos">
+    <button class="nav-btn" id="nav-grupos" onclick="navTo('grupos')" title="Fase de Grupos">
       <i class="ti ti-layout-grid"></i><span class="nav-text"> Fase de Grupos</span><span class="nbadge">A–L</span>
     </button>
     <div class="grp-grid" id="grp-grid"></div>
+    <button class="nav-btn" id="nav-elim" onclick="navTo('elim')" title="Eliminatorias">
+      <i class="ti ti-sitemap"></i><span class="nav-text"> Eliminatorias</span>
+    </button>
     <button class="nav-btn" id="nav-bracket" onclick="navTo('bracket')" title="Bracket R32">
       <i class="ti ti-tournament"></i><span class="nav-text"> Bracket R32</span>
     </button>
-    <button class="nav-btn" id="nav-elim" onclick="navTo('elim')" title="Eliminatorias">
-      <i class="ti ti-sitemap"></i><span class="nav-text"> Eliminatorias</span>
     </button>
   </div>
 
@@ -643,6 +687,7 @@ select option{background:var(--bg-800)}
       <div class="pg-sub" id="hdr-sub">Tabla de posiciones, partidos y predicciones por grupo</div>
     </div>
     <div class="live-pill" id="live-pill"><span class="live-dot" id="live-dot"></span> <span id="live-label">Cargando…</span></div>
+    <button id="btn-theme" onclick="toggleTheme()" title="Cambiar tema claro/oscuro"><i class="ti ti-sun" id="theme-icon"></i></button>
     <button id="btn-reset" onclick="resetResults()" title="Restaurar resultados iniciales conocidos">
       <i class="ti ti-history"></i><span class="btn-label"> Restaurar</span>
     </button>
@@ -829,15 +874,29 @@ select option{background:var(--bg-800)}
     <!-- Estado: conectado -->
     <div id="qn-connected-box" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-        <div style="font-size:12px;color:var(--text-400)">
-          <span style="color:var(--green-400)">●</span> Conectado como <strong id="qn-username-lbl" style="color:var(--text-200)"></strong>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div style="font-size:12px;color:var(--text-400)">
+            <span style="color:var(--green-400)">●</span> Conectado como <strong id="qn-username-lbl" style="color:var(--text-200)"></strong>
+          </div>
+          <div id="qn-my-score-box" style="display:none;align-items:center;gap:6px">
+            <span style="font-size:11px;color:var(--text-500)">Mi puntaje</span>
+            <span id="qn-my-score-lbl" style="font-size:22px;font-weight:800;color:var(--gold);line-height:1"></span>
+            <span style="font-size:10px;color:var(--text-500)">pts</span>
+          </div>
         </div>
         <div style="display:flex;gap:6px">
-          <button id="qn-refresh-btn" onclick="qnLoadPool()" style="display:flex;align-items:center;gap:6px;flex-shrink:0;background:var(--blue);color:#fff;border:none;border-radius:var(--r-md);padding:7px 13px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s;white-space:nowrap"><i class="ti ti-refresh" style="font-size:14px"></i> Actualizar</button>
+          <button id="qn-refresh-btn" onclick="qnRefreshAll()" style="display:flex;align-items:center;gap:6px;flex-shrink:0;background:var(--blue);color:#fff;border:none;border-radius:var(--r-md);padding:7px 13px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s;white-space:nowrap"><i class="ti ti-refresh" style="font-size:14px"></i> Actualizar</button>
           <button class="btn-cancel" onclick="qnLogout()" title="Cerrar sesión"><i class="ti ti-logout"></i></button>
         </div>
       </div>
+      <!-- Tabs -->
+      <div style="display:flex;border-bottom:1px solid var(--bg-700);margin-bottom:12px">
+        <button id="qn-tab-pred" class="qn-tab active" onclick="qnSwitchTab('pred')"><i class="ti ti-list-check"></i> Mis Pronósticos</button>
+        <button id="qn-tab-pos" class="qn-tab" onclick="qnSwitchTab('pos')"><i class="ti ti-trophy"></i> Posiciones</button>
+      </div>
       <div id="qn-content"></div>
+      <div id="qn-standings-content" style="display:none"></div>
+      <div id="qn-match-detail"></div>
     </div>
   </div>
 
@@ -1178,6 +1237,24 @@ function openSB(){
   document.getElementById('sidebar').classList.add('mobile-open');
   document.getElementById('backdrop').classList.add('show');
 }
+function toggleTheme(){
+  var isLight=document.documentElement.getAttribute('data-theme')==='light';
+  var next=isLight?'dark':'light';
+  applyTheme(next);
+  try{localStorage.setItem('theme',next);}catch(e){}
+}
+function applyTheme(t){
+  if(t==='light'){
+    document.documentElement.setAttribute('data-theme','light');
+    document.getElementById('theme-icon').className='ti ti-moon';
+    document.querySelector('meta[name="theme-color"]').setAttribute('content','#f8fafc');
+  }else{
+    document.documentElement.removeAttribute('data-theme');
+    document.getElementById('theme-icon').className='ti ti-sun';
+    document.querySelector('meta[name="theme-color"]').setAttribute('content','#0f172a');
+  }
+}
+(function(){try{var t=localStorage.getItem('theme');if(t)applyTheme(t);}catch(e){}}());
 function closeSB(){
   document.getElementById('sidebar').classList.remove('mobile-open');
   document.getElementById('backdrop').classList.remove('show');
@@ -1283,6 +1360,21 @@ function hmHTML(lA,lB,na,nb){
   return h+`</tbody></table>`;
 }
 
+// ── Helper: fecha/hora local de un partido ──────────────
+function fmtMatchDT(id){
+  var MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  if(MATCH_TIMES[id]){
+    var d=new Date(MATCH_TIMES[id]);
+    return d.getDate()+' '+MESES[d.getMonth()]+' · '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  }
+  var s=SCHED&&SCHED[id];
+  if(s&&s.dt){
+    var p=s.dt.split('-');
+    return parseInt(p[2])+' '+MESES[parseInt(p[1])-1];
+  }
+  return null;
+}
+
 // ═══════════════════════════════════════════════════════
 // RENDER: STANDINGS
 // ═══════════════════════════════════════════════════════
@@ -1356,7 +1448,8 @@ function renderMatches(){
           <button class="btn-edit" onclick="startE(${r.id},${lv.hg},${lv.ag})" title="Editar"><i class="ti ti-edit"></i></button>
         </div>`;
       }else{
-        h+=`<div style="flex-shrink:0"><button class="btn-reg" onclick="startE(${r.id},0,0)"><i class="ti ti-plus"></i> Registrar</button></div>`;
+        const _dt=fmtMatchDT(r.id);
+        h+=`<div style="flex-shrink:0;text-align:center">${_dt?`<div style="font-size:10px;color:var(--blue-400);font-weight:600;margin-bottom:3px;white-space:nowrap">${_dt}</div>`:''}<button class="btn-reg" onclick="startE(${r.id},0,0)"><i class="ti ti-plus"></i> Registrar</button></div>`;
       }
       h+=`<div class="tn away" style="font-weight:${!fH&&!lv.p?600:400}">${T[r.a]?.fl||''} ${r.a}</div>
       </div>`;
@@ -1410,9 +1503,15 @@ function updPred(){
   document.getElementById('pbar-main').innerHTML=`
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px">
-        <span style="font-size:13px;font-weight:${pr.pW>pr.pL?700:400};flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${fA} ${na}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:${pr.pW>pr.pL?700:400};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${fA} ${na}</div>
+          <button class="btn-pred-cal" style="background:rgba(245,158,11,.15);color:#fbbf24;padding:1px 6px;font-size:9px;margin-top:4px" onclick="goToEscenarios('${na}')">📊 Escenarios</button>
+        </div>
         <span style="font-size:10px;color:var(--text-400);flex-shrink:0">probabilidad</span>
-        <span style="font-size:13px;font-weight:${pr.pL>pr.pW?700:400};flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right">${nb} ${fB}</span>
+        <div style="flex:1;min-width:0;text-align:right">
+          <div style="font-size:13px;font-weight:${pr.pL>pr.pW?700:400};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nb} ${fB}</div>
+          <button class="btn-pred-cal" style="background:rgba(245,158,11,.15);color:#fbbf24;padding:1px 6px;font-size:9px;margin-top:4px" onclick="goToEscenarios('${nb}')">📊 Escenarios</button>
+        </div>
       </div>
       ${pbarHTML(W,D,L)}
       <div style="display:flex;justify-content:space-between;margin-top:7px;font-size:12px">
@@ -1563,11 +1662,18 @@ function renderBracket(){
   Object.keys(GR).forEach(g=>{qual[g]=tbl(g,RES).slice(0,2).map(d=>d.t);});
   const pairs=[['A',0,'B',1],['B',0,'A',1],['C',0,'D',1],['D',0,'C',1],['E',0,'F',1],['F',0,'E',1],
                ['G',0,'H',1],['H',0,'G',1],['I',0,'J',1],['J',0,'I',1],['K',0,'L',1],['L',0,'K',1]];
+  // Map bracket slot → match ID using KO_BRACKET sh/sa notation
+  const pairToId={};
+  KO_BRACKET.filter(k=>k.rnd==='R32').forEach(k=>{pairToId[k.sh+'|'+k.sa]=k.id;});
   function bkMatch(p){
     const t1=qual[p[0]]?.[p[1]]||`?${p[0]}${p[1]+1}`;
     const t2=qual[p[2]]?.[p[3]]||`?${p[2]}${p[3]+1}`;
     const pr=(T[t1]&&T[t2])?sim(t1,t2):null;
     const fav=pr&&pr.pW>pr.pL;
+    const sh=(p[1]===0?'1':'2')+p[0], sa=(p[3]===0?'1':'2')+p[2];
+    const mid=pairToId[sh+'|'+sa];
+    const koM=mid&&RES_KO.find(k=>k.id===mid);
+    const bkDt=(mid&&!(koM&&koM.p))?fmtMatchDT(mid):null;
     return`<div class="bk-match">
       <div class="bk-team ${fav?'fav':''}">
         ${T[t1]?.fl||'🏳️'} <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t1}</span>
@@ -1578,6 +1684,7 @@ function renderBracket(){
         ${pr?`<span class="bk-pct">${(pr.pL*100).toFixed(0)}%</span>`:''}
       </div>
       <div style="font-size:9px;color:var(--text-600);margin-top:5px;text-align:center">Gr.${p[0]}${p[1]+1} vs Gr.${p[2]}${p[3]+1}</div>
+      ${bkDt?`<div style="font-size:9px;color:var(--blue-400);font-weight:600;text-align:center;margin-top:3px">${bkDt}</div>`:''}
       ${(T[t1]&&T[t2])?`<button class="btn-pred-cal" style="width:100%;margin-top:6px" data-h="${t1}" data-a="${t2}" onclick="goToPredictor(this.dataset.h,this.dataset.a)">🔮 Predecir</button><button class="btn-pred-cal" style="width:100%;margin-top:4px;background:rgba(99,102,241,.2);color:#818cf8" data-h="${t1}" data-a="${t2}" onclick="goToH2H(this.dataset.h,this.dataset.a)">⚔️ H2H</button>`:''}
     </div>`;
   }
@@ -1824,10 +1931,28 @@ function updateLivePill(){
     dot.style.background='var(--green)';
   }
 }
+function updateGrpDots(){
+  var td=new Date();
+  var todayS=td.getFullYear()+'-'+String(td.getMonth()+1).padStart(2,'0')+'-'+String(td.getDate()).padStart(2,'0');
+  var grpsToday=new Set();
+  RES.forEach(function(r){
+    var dt=(SCHED[r.id]||{}).dt||'';
+    if(MATCH_TIMES[r.id]){var d=new Date(MATCH_TIMES[r.id]);dt=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+    if(dt===todayS) grpsToday.add(r.g);
+  });
+  document.querySelectorAll('.gg-btn').forEach(function(b){
+    var g=b.dataset.g;
+    var hasDot=!!b.querySelector('.gg-today-dot');
+    var needsDot=grpsToday.has(g);
+    if(needsDot&&!hasDot) b.insertAdjacentHTML('beforeend','<span class="gg-today-dot"></span>');
+    else if(!needsDot&&hasDot) b.querySelector('.gg-today-dot').remove();
+  });
+}
+
 function refreshPanels(){
   eId=null;
   renderStand();renderMatches();updateSB();updateLivePill();
-  renderStats();renderBracket();
+  renderStats();renderBracket();updateGrpDots();
   if(document.getElementById('panel-cal').classList.contains('active')) renderCalendar();
   if(document.getElementById('panel-elim').classList.contains('active')) renderElim();
 }
@@ -1862,7 +1987,9 @@ async function syncResults(){
 // ── ESPN fetch (no auth, no CORS issues) ──
 const ESPN_SLUGS=['fifa.world','fifa.worldcup','fifa.worldcup.2026'];
 async function fetchFromESPN(){
-  const dates='20260611-20260719';
+  var _td=new Date();
+  var _todayStr=_td.getFullYear()+String(_td.getMonth()+1).padStart(2,'0')+String(_td.getDate()).padStart(2,'0');
+  const dates='20260611-20260726';
   for(const slug of ESPN_SLUGS){
     for(const base of ['https://site.api.espn.com/apis/site/v2/sports/soccer','https://site.api.espn.com/apis/v2/sports/soccer']){
       try{
@@ -1881,6 +2008,7 @@ async function fetchFromESPN(){
 }
 function applyESPNTimes(events){
   var changed=false;
+  // First pass: match group-stage events by team name
   events.forEach(function(ev){
     var comp=(ev.competitions||[])[0];
     if(!comp)return;
@@ -1893,6 +2021,32 @@ function applyESPNTimes(events){
     if(idx===-1)return;
     var dt=ev.date||comp.date||'';
     if(dt&&!MATCH_TIMES[RES[idx].id]){MATCH_TIMES[RES[idx].id]=dt;changed=true;}
+  });
+  // Second pass: capture KO times from ESPN by pairing events on same date
+  // (KO teams are TBD so name-matching fails; use date+order instead)
+  var byDate={};
+  events.forEach(function(ev){
+    var dt=ev.date||((ev.competitions||[])[0]||{}).date||'';
+    if(!dt)return;
+    var day=dt.substring(0,10);
+    if(!byDate[day])byDate[day]=[];
+    byDate[day].push(dt);
+  });
+  Object.keys(byDate).forEach(function(d){byDate[d].sort();});
+  var schedByDate={};
+  Object.keys(SCHED).forEach(function(sid){
+    var id=parseInt(sid);
+    if(id<73)return;
+    var s=SCHED[id];if(!s||!s.dt)return;
+    if(!schedByDate[s.dt])schedByDate[s.dt]=[];
+    schedByDate[s.dt].push(id);
+  });
+  Object.keys(schedByDate).forEach(function(d){schedByDate[d].sort(function(a,b){return a-b;});});
+  Object.keys(schedByDate).forEach(function(d){
+    var evTimes=byDate[d]||[];
+    schedByDate[d].forEach(function(id,i){
+      if(!MATCH_TIMES[id]&&evTimes[i]){MATCH_TIMES[id]=evTimes[i];changed=true;}
+    });
   });
   if(changed)try{localStorage.setItem('match-times',JSON.stringify(MATCH_TIMES));}catch(e){}
 }
@@ -1995,7 +2149,7 @@ function resetResults(){
     document.getElementById('sidebar').classList.add('collapsed');
     document.getElementById('sb-chev').style.transform='rotate(180deg)';
   }
-  // Group grid
+  // Group grid (dots are added by updateGrpDots() after SCHED/MATCH_TIMES are available)
   const gg=document.getElementById('grp-grid');
   Object.keys(GR).forEach(g=>{
     const b=document.createElement('button');
@@ -2016,6 +2170,8 @@ function resetResults(){
   renderStand();renderMatches();updateSB();updateLivePill();
   // Auto-sync on load
   syncResults();
+  // Default panel — deferred so SCHED/VENUES consts are fully initialized
+  setTimeout(function(){ navTo('cal'); }, 0);
 })();
 // ═══════════════════════════════════════════════════════
 // MONTE CARLO SIMULATOR — FIFA 2026 (48 equipos, 12 grupos)
@@ -2329,6 +2485,7 @@ function renderH2H(){
         +'<div style="text-align:'+align+';flex:1">'
           +'<div style="font-size:16px;font-weight:800;color:#f8fafc">'+nm+'</div>'
           +'<div style="font-size:11px;color:#94a3b8;margin-top:2px">Grupo '+d.g+' · FIFA #'+d.r+(d.host?' 🏠':'')+'</div>'
+          +'<button class="btn-pred-cal" style="background:rgba(245,158,11,.15);color:#fbbf24;padding:1px 6px;font-size:9px;margin-top:6px" onclick="goToEscenarios(\''+nm+'\')">📊 Escenarios</button>'
         +'</div>'
       +'</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
@@ -2480,7 +2637,7 @@ async function syncGoleadores(){
   for(var si=0;si<ESPN_SLUGS.length;si++){
     var slug=ESPN_SLUGS[si];
     try{
-      var r=await fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/'+slug+'/scoreboard?dates=20260611-20260719&limit=200');
+      var r=await fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/'+slug+'/scoreboard?dates=20260611-20260726&limit=200');
       if(!r.ok) continue;
       var d=await r.json();
       var evs=(d.events||[]).filter(function(ev){
@@ -2929,7 +3086,24 @@ const SCHED={
   65:{dt:"2026-06-30",v:"AKR"}, 66:{dt:"2026-06-30",v:"SOF"},
   67:{dt:"2026-06-30",v:"MLS"}, 68:{dt:"2026-06-30",v:"ATT"},
   69:{dt:"2026-07-01",v:"EMP"}, 70:{dt:"2026-07-01",v:"BCP"},
-  71:{dt:"2026-07-01",v:"ARR"}, 72:{dt:"2026-07-01",v:"BMO"}
+  71:{dt:"2026-07-01",v:"ARR"}, 72:{dt:"2026-07-01",v:"BMO"},
+  // ── Ronda de 32 (R32) — Jul 4–7 ──
+  73:{dt:"2026-07-04"}, 74:{dt:"2026-07-04"}, 85:{dt:"2026-07-04"}, 86:{dt:"2026-07-04"},
+  75:{dt:"2026-07-05"}, 76:{dt:"2026-07-05"}, 87:{dt:"2026-07-05"}, 88:{dt:"2026-07-05"},
+  77:{dt:"2026-07-06"}, 78:{dt:"2026-07-06"}, 79:{dt:"2026-07-06"}, 80:{dt:"2026-07-06"},
+  81:{dt:"2026-07-07"}, 82:{dt:"2026-07-07"}, 83:{dt:"2026-07-07"}, 84:{dt:"2026-07-07"},
+  // ── Octavos de Final (R16) — Jul 10–13 ──
+  89:{dt:"2026-07-10"}, 90:{dt:"2026-07-10"},
+  91:{dt:"2026-07-11"}, 92:{dt:"2026-07-11"},
+  93:{dt:"2026-07-12"}, 94:{dt:"2026-07-12"},
+  95:{dt:"2026-07-13"}, 96:{dt:"2026-07-13"},
+  // ── Cuartos de Final (QF) — Jul 15–16 ──
+  97:{dt:"2026-07-15"}, 98:{dt:"2026-07-15"},
+  99:{dt:"2026-07-16"}, 100:{dt:"2026-07-16"},
+  // ── Semifinales — Jul 19 y 21 ──
+  101:{dt:"2026-07-19"}, 102:{dt:"2026-07-21"},
+  // ── Tercer lugar y Final ──
+  103:{dt:"2026-07-24"}, 104:{dt:"2026-07-26"}
 };
 
 var calCurrentFilter='all';
@@ -2942,11 +3116,17 @@ function calFilter(btn, filter){
 }
 
 function renderCalendar(){
-  var today='2026-06-20';
+  var _now=new Date();
+  var today=_now.getFullYear()+'-'+String(_now.getMonth()+1).padStart(2,'0')+'-'+String(_now.getDate()).padStart(2,'0');
   var matches=RES.map(function(m){
     var s=SCHED[m.id]||{dt:'2026-07-01',v:'MLS'};
     var vd=VENUES[s.v]||{n:s.v,city:'',flag:'',cc:'us'};
-    return {id:m.id,g:m.g,h:m.h,a:m.a,hg:m.hg,ag:m.ag,p:m.p,r:m.r,dt:s.dt,vk:s.v,vd:vd};
+    var dt=s.dt;
+    if(MATCH_TIMES[m.id]){
+      var kd=new Date(MATCH_TIMES[m.id]);
+      dt=kd.getFullYear()+'-'+String(kd.getMonth()+1).padStart(2,'0')+'-'+String(kd.getDate()).padStart(2,'0');
+    }
+    return {id:m.id,g:m.g,h:m.h,a:m.a,hg:m.hg,ag:m.ag,p:m.p,r:m.r,dt:dt,vk:s.v,vd:vd};
   });
 
   var f=calCurrentFilter;
@@ -2965,6 +3145,13 @@ function renderCalendar(){
   var byDay={};
   filtered.forEach(function(m){ if(!byDay[m.dt]) byDay[m.dt]=[]; byDay[m.dt].push(m); });
   var days=Object.keys(byDay).sort();
+  days.forEach(function(dt){
+    byDay[dt].sort(function(a,b){
+      var ta=MATCH_TIMES[a.id]?new Date(MATCH_TIMES[a.id]).getTime():Infinity;
+      var tb=MATCH_TIMES[b.id]?new Date(MATCH_TIMES[b.id]).getTime():Infinity;
+      return ta-tb || a.id-b.id;
+    });
+  });
 
   if(!days.length){
     document.getElementById('cal-content').innerHTML='<div class="card" style="text-align:center;padding:30px;color:#94a3b8">No hay partidos para este filtro</div>';
@@ -3036,7 +3223,7 @@ function renderCalendar(){
           )
         +'</div>'
         +'<div class="cal-meta">'
-          +(localTime?'<span class="cal-venue" style="color:var(--blue-400);font-weight:700;font-size:11px">🕐 '+localTime+' local</span>':'')
+          +(localTime?'<span class="cal-venue" style="color:var(--blue-400);font-weight:700;font-size:11px">🕐 '+localTime+'</span>':'')
           +'<span class="cal-venue">'+vc.flag+' '+vc.city+'</span>'
           +'<span class="cal-venue" style="color:#334155;font-size:9px">'+vc.n+'</span>'
           +(m.p?'':'<button class="btn-pred-cal" onclick="goToPredictor(\''+m.h.replace(/'/g,"\\'")+"','"+m.a.replace(/'/g,"\\'")+'\')">🔮 Predecir</button>'
@@ -3184,9 +3371,11 @@ function renderElim(){
         +'<button class="btn-edit" onclick="startKOEdit('+m.id+')" title="Editar"><i class="ti ti-edit"></i></button>'
         +'</div>';
     } else if(both){
-      html+='<div style="flex-shrink:0"><button class="btn-reg" onclick="startKOEdit('+m.id+')"><i class="ti ti-plus"></i> Registrar</button></div>';
+      var _kodt=fmtMatchDT(m.id);
+      html+='<div style="flex-shrink:0;text-align:center">'+(_kodt?'<div style="font-size:10px;color:var(--blue-400);font-weight:600;margin-bottom:3px;white-space:nowrap">'+_kodt+'</div>':'')+'<button class="btn-reg" onclick="startKOEdit('+m.id+')"><i class="ti ti-plus"></i> Registrar</button></div>';
     } else {
-      html+='<div style="flex-shrink:0;font-size:10px;color:var(--text-600);padding:4px 8px;background:var(--bg-800);border-radius:var(--r-sm)">TBD</div>';
+      var _kodt2=fmtMatchDT(m.id);
+      html+='<div style="flex-shrink:0;text-align:center">'+(_kodt2?'<div style="font-size:10px;color:var(--blue-400);font-weight:600;margin-bottom:3px;white-space:nowrap">'+_kodt2+'</div>':'')+'<div style="font-size:10px;color:var(--text-600);padding:4px 8px;background:var(--bg-800);border-radius:var(--r-sm)">TBD</div></div>';
     }
 
     html+='<div class="tn away" style="font-weight:'+(!fH&&!m.p?600:400)+'">'+flA+' '+teamA+'</div>';
@@ -3246,11 +3435,14 @@ function cancKOEdit(){
 
 async function syncKnockout(){
   var updated=0;
+  // Rango dinámico: desde inicio del torneo hasta hoy (máx. +3 días para partidos confirmados próximos)
+  var todayD=new Date();
+  var todayStr=todayD.getFullYear()+String(todayD.getMonth()+1).padStart(2,'0')+String(todayD.getDate()).padStart(2,'0');
   for(var si=0;si<ESPN_SLUGS.length;si++){
     var slug=ESPN_SLUGS[si];
     var urls=[
-      'https://site.api.espn.com/apis/site/v2/sports/soccer/'+slug+'/scoreboard?dates=20260701-20260720&limit=100',
-      'https://site.api.espn.com/apis/site/v2/sports/soccer/'+slug+'/scoreboard?dates=20260620-20260720&limit=100'
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/'+slug+'/scoreboard?dates=20260611-20260726&limit=200',
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/'+slug+'/scoreboard?dates=20260726&limit=100'
     ];
     for(var ui=0;ui<urls.length;ui++){
       try{
@@ -3296,6 +3488,321 @@ async function syncKnockout(){
 // QUINIELA GOLPREDICTOR
 // ═══════════════════════════════════════════════════════
 var QN_PID='0,b2bfbc17-41b4-43c6-a48a-6c2ad5baa31d';
+var QN_DATA=null;
+var QN_META={ptsIdx:-1,lastIdx:-1,nameIdx:1};
+var QN_STANDINGS=null;
+
+function qnRenderMatchDetail(matchName, entries){
+  var groups={};
+  entries.forEach(function(e){
+    var pred=(e.pred||'—').trim()||'—';
+    if(!groups[pred]) groups[pred]=[];
+    groups[pred].push(e.name);
+  });
+  var sorted=Object.keys(groups).sort(function(a,b){return groups[b].length-groups[a].length;});
+  var total=entries.length;
+  var colors=['var(--green-400)','var(--blue-400)','var(--gold)','var(--red-400)','var(--text-400)'];
+  var html='<div class="card" style="margin-top:12px">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+      +'<div class="card-title" style="margin:0"><i class="ti ti-list-details"></i> Pronósticos · <strong style="color:var(--gold)">'+matchName+'</strong></div>'
+      +'<button style="background:none;border:none;color:var(--text-500);cursor:pointer;font-size:18px;line-height:1;padding:0 2px" onclick="document.getElementById(\'qn-match-detail\').innerHTML=\'\'">✕</button>'
+    +'</div>';
+  sorted.forEach(function(pred,pi){
+    var names=groups[pred];
+    var pct=Math.round(names.length/total*100);
+    var color=colors[Math.min(pi,colors.length-1)];
+    html+='<div style="margin-bottom:12px">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
+        +'<span style="font-size:14px;font-weight:800;color:var(--text-100);min-width:64px">'+pred+'</span>'
+        +'<span style="font-size:11px;color:var(--text-400)">'+names.length+' participante'+(names.length!==1?'s':'')+' · '+pct+'%</span>'
+      +'</div>'
+      +'<div style="height:5px;background:var(--bg-700);border-radius:3px;margin-bottom:5px">'
+        +'<div style="height:5px;background:'+color+';border-radius:3px;width:'+pct+'%;transition:width .3s"></div>'
+      +'</div>'
+      +'<div style="font-size:11px;color:var(--text-500);line-height:1.6">'+names.join(' · ')+'</div>'
+    +'</div>';
+  });
+  html+='</div>';
+  var el=document.getElementById('qn-match-detail');
+  el.innerHTML=html;
+  el.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function qnCellText(td){
+  var txt=(td.textContent||'').replace(/[\r\n\t]+/g,' ').replace(/\s{2,}/g,' ').trim();
+  if(txt) return txt;
+  var inp=td.querySelector('input[type="text"],input:not([type])');
+  if(inp&&inp.value.trim()) return inp.value.trim();
+  var sel=td.querySelector('select');
+  if(sel&&sel.value.trim()) return sel.value.trim();
+  var img=td.querySelector('img[alt]');
+  if(img&&img.alt.trim()) return img.alt.trim();
+  return '';
+}
+
+function qnParseMatchPreds(html){
+  var parser=new DOMParser();
+  var doc=parser.parseFromString(html,'text/html');
+  var tables=Array.from(doc.querySelectorAll('table'));
+  if(!tables.length) return null;
+
+  // Buscar la tabla que tenga "Pronóstico" en los headers (no el ranking general)
+  var predTbl=null;
+  tables.forEach(function(t){
+    if(t.rows.length<2) return;
+    var hdrs=Array.from(t.rows[0].cells).map(function(c){return c.textContent.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');});
+    if(hdrs.some(function(h){return /pron|pred/.test(h);})) predTbl=t;
+  });
+  // Fallback: tabla más grande con al menos 2 columnas
+  if(!predTbl) predTbl=tables.filter(function(t){return t.rows.length>1&&t.rows[0].cells.length>1;}).reduce(function(a,b){return b.rows.length>a.rows.length?b:a;},tables[0]);
+  if(!predTbl||predTbl.rows.length<2) return null;
+
+  // Excluir columna "Modifica" (timestamps de edición, no son útiles)
+  var allHdrs=Array.from(predTbl.rows[0].cells).map(function(c){return c.textContent.trim();});
+  var skipCols={};
+  allHdrs.forEach(function(h,i){if(/modific|edit|fecha/i.test(h)) skipCols[i]=true;});
+
+  var headers=allHdrs.filter(function(_,i){return !skipCols[i];});
+  var rows=[];
+  for(var i=1;i<predTbl.rows.length;i++){
+    var cells=Array.from(predTbl.rows[i].cells).map(qnCellText).filter(function(_,i){return !skipCols[i];});
+    if(cells.every(function(c){return !c;})) continue;
+    rows.push(cells);
+  }
+  // Extraer pronóstico propio del usuario desde la mini-tabla del partido
+  var myPred=null;
+  tables.forEach(function(t){
+    if(t.rows.length>6) return;
+    for(var r=0;r<t.rows.length;r++){
+      Array.from(t.rows[r].cells).forEach(function(c){
+        var m=c.textContent.replace(/[\r\n\t]+/g,' ').trim().match(/Pron[oó]stico:\s*(.+?)(?:\s*$)/i);
+        if(m) myPred=m[1].trim();
+      });
+    }
+  });
+
+  return rows.length?{headers:headers,rows:rows,myPred:myPred}:null;
+}
+
+function qnRenderMatchTable(matchName, data, targetEl){
+  var hdrs=data.headers;
+  var ptsIdx=-1, predIdx=-1, userIdx=-1, acumIdx=-1, nombreIdx=-1;
+  hdrs.forEach(function(h,i){
+    var hn=h.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+    var reAcum=/acum|acumulad/;
+    var rePts=/punt|ptos|pts/;
+    var rePred=/pron|pred|marcad/;
+    var reUser=/usuar|user|partic|jugad|apodo/;
+    var reNombre=/^nombre$/;
+    if(acumIdx<0&&reAcum.test(hn)) acumIdx=i;
+    if(ptsIdx<0&&i!==acumIdx&&rePts.test(hn)) ptsIdx=i;
+    if(predIdx<0&&rePred.test(hn)) predIdx=i;
+    if(userIdx<0&&reUser.test(hn)) userIdx=i;
+    if(nombreIdx<0&&reNombre.test(hn)) nombreIdx=i;
+  });
+
+  /* Puntaje total acumulado del usuario (de la tabla principal) */
+  var myTotalPts=null;
+  if(typeof QN_DATA!=='undefined'&&QN_DATA&&typeof QN_META!=='undefined'&&QN_META&&QN_META.ptsIdx>=0){
+    var _sum=0;
+    QN_DATA.rows.forEach(function(r){_sum+=parseFloat((r[QN_META.ptsIdx]||'').replace(/[^0-9]/g,''))||0;});
+    myTotalPts=_sum;
+  }
+
+  /* ── Gráfica de distribución de pronósticos ── */
+  var distHtml='';
+  if(predIdx>=0){
+    var homeW=0,draws=0,awayW=0,predCount={};
+    data.rows.forEach(function(row){
+      var pred=(row[predIdx]||'').trim().replace(/\s/g,'');
+      if(!pred) return;
+      predCount[pred]=(predCount[pred]||0)+1;
+      var m=pred.match(/^(\d+)[:\-](\d+)$/);
+      if(m){
+        var a=parseInt(m[1]),b=parseInt(m[2]);
+        if(a>b) homeW++; else if(a===b) draws++; else awayW++;
+      }
+    });
+    var total=homeW+draws+awayW;
+    if(total>0){
+      /* Extraer nombres del partido */
+      var parts=matchName.split(/\svs\.?\s/i);
+      var teamA=parts[0]?parts[0].trim():'Local';
+      var teamB=parts[1]?parts[1].trim():'Visitante';
+      var pA=Math.round(homeW/total*100),pD=Math.round(draws/total*100),pB=100-pA-pD;
+      /* Top predicciones exactas */
+      var topPreds=Object.keys(predCount).sort(function(a,b){return predCount[b]-predCount[a];}).slice(0,4);
+      var topHtml=topPreds.map(function(p){
+        var cnt=predCount[p];
+        var pct=Math.round(cnt/data.rows.length*100);
+        return '<span style="display:inline-flex;align-items:center;gap:4px;background:var(--bg-700);border-radius:20px;padding:3px 8px;font-size:10px;font-weight:600">'
+          +p+' <span style="color:var(--text-500);font-weight:400">'+pct+'%</span></span>';
+      }).join('');
+      distHtml='<div style="margin-bottom:12px;padding:10px 12px;background:var(--bg-800);border-radius:var(--r-md);border:1px solid var(--bg-700)">'
+        +'<div style="display:flex;justify-content:space-between;font-size:10px;font-weight:600;margin-bottom:6px">'
+          +'<span style="color:var(--green-400)"><i class="ti ti-trophy"></i> '+teamA+'<span style="color:var(--text-500);font-weight:400;margin-left:4px">'+homeW+' ('+pA+'%)</span></span>'
+          +'<span style="color:var(--text-400)">Empate<span style="color:var(--text-500);font-weight:400;margin-left:4px">'+draws+' ('+pD+'%)</span></span>'
+          +'<span style="color:var(--blue-400)">'+teamB+' <i class="ti ti-trophy"></i><span style="color:var(--text-500);font-weight:400;margin-left:4px">'+awayW+' ('+pB+'%)</span></span>'
+        +'</div>'
+        +'<div style="display:flex;border-radius:4px;overflow:hidden;height:8px;gap:1px">'
+          +(pA>0?'<div style="flex:'+pA+';background:var(--green-400);opacity:.85"></div>':'')
+          +(pD>0?'<div style="flex:'+pD+';background:var(--bg-600)"></div>':'')
+          +(pB>0?'<div style="flex:'+pB+';background:var(--blue-400);opacity:.85"></div>':'')
+        +'</div>'
+        +(topHtml?'<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;align-items:center">'
+          +'<span style="font-size:9px;color:var(--text-500);margin-right:2px">Top:</span>'+topHtml
+        +'</div>':'')
+      +'</div>';
+    }
+  }
+
+  var html='<div style="padding:8px 4px;overflow-x:auto">'+distHtml
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+      +'<span style="font-size:11px;color:var(--text-500)"><i class="ti ti-users"></i> '+data.rows.length+' participantes</span>'
+    +'</div>'
+    +'<table class="qn-table" style="font-size:11px"><thead><tr>';
+  hdrs.forEach(function(h,i){
+    var style=i===ptsIdx?'color:var(--gold);font-weight:800':i===predIdx?'color:var(--blue-400)':'';
+    var mobH=i===userIdx?' class="qn-hide-mob"':'';
+    html+='<th'+mobH+(style?' style="'+style+'"':'')+'>'+h+'</th>';
+  });
+  html+='</tr></thead><tbody>';
+  data.rows.forEach(function(row,ri){
+    var isMe=ri===data.myRowIdx;
+    html+='<tr'+(isMe?' style="background:rgba(245,158,11,.1)"':'')+'>';
+    row.forEach(function(cell,i){
+      var mobC=i===userIdx?' class="qn-hide-mob"':'';
+      if(i===ptsIdx){
+        html+='<td class="qn-pts" style="font-size:11px">'+cell+'</td>';
+      } else if(i===acumIdx&&isMe&&myTotalPts!==null){
+        html+='<td style="font-weight:800;color:var(--gold);font-size:12px">'+myTotalPts+'</td>';
+      } else if(i===predIdx){
+        html+='<td style="font-weight:700;color:'+(isMe?'var(--gold)':'var(--blue-400)')+'">'+(cell+(isMe?' 👤':''))+'</td>';
+      } else if(i===nombreIdx&&isMe){
+        html+='<td style="color:var(--gold);font-weight:700"><i class="ti ti-user" style="font-size:11px;vertical-align:middle"></i> Yo</td>';
+      } else {
+        html+='<td'+mobC+(isMe?' style="color:var(--gold);font-weight:600"':'')+'>'+cell+'</td>';
+      }
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table></div>';
+
+  if(targetEl){
+    targetEl.innerHTML=html;
+  } else {
+    var el=document.getElementById('qn-match-detail');
+    el.innerHTML=html;
+    el.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+}
+
+async function qnFetchMatchDetail(matchName, href, triggerTd){
+  // ── Gestión de fila expandible ────────────────────────────────────────────
+  var triggerTr=triggerTd?triggerTd.closest('tr'):null;
+  var colCount=triggerTr?triggerTr.cells.length:6;
+  var icon=triggerTd?triggerTd.querySelector('.qn-expand-icon'):null;
+
+  // Toggle: si ya está abierta la misma fila, cerrar y salir
+  var existing=triggerTr?triggerTr.nextElementSibling:null;
+  if(existing&&existing.classList&&existing.classList.contains('qn-detail-row')&&existing.dataset.match===matchName){
+    existing.remove();
+    if(icon){icon.textContent='▾';icon.style.transform='';}
+    return;
+  }
+
+  // Cerrar cualquier otra fila de detalle abierta
+  document.querySelectorAll('tr.qn-detail-row').forEach(function(r){r.remove();});
+  document.querySelectorAll('.qn-expand-icon').forEach(function(i){i.textContent='▾';i.style.transform='';});
+
+  // Crear fila de detalle con loading
+  var detailTr=document.createElement('tr');
+  detailTr.className='qn-detail-row';
+  detailTr.dataset.match=matchName;
+  detailTr.style.cssText='background:var(--bg-800)';
+  var detailTd=document.createElement('td');
+  detailTd.colSpan=colCount;
+  detailTd.style.cssText='padding:0;border-top:2px solid var(--blue-400)';
+  detailTd.innerHTML='<div style="text-align:center;padding:16px;color:var(--text-500);font-size:12px">Cargando pronósticos de <strong style="color:var(--text-200)">'+matchName+'</strong>…</div>';
+  detailTr.appendChild(detailTd);
+
+  if(triggerTr&&triggerTr.parentNode){
+    triggerTr.parentNode.insertBefore(detailTr,triggerTr.nextSibling);
+    detailTr.scrollIntoView({behavior:'smooth',block:'nearest'});
+  } else {
+    // fallback al div legacy
+    document.getElementById('qn-match-detail').appendChild(detailTr);
+  }
+  if(icon){icon.textContent='▾';icon.style.transform='rotate(180deg)';}
+
+  var targetEl=detailTd; // donde se inyectan los resultados
+
+  var w='',c='',myUser='';
+  try{w=localStorage.getItem('qn-worker')||'';c=localStorage.getItem('qn-cookie')||'';myUser=localStorage.getItem('qn-username')||'';}catch(e){}
+  w=w.replace(/\/+$/,'');if(w&&!w.startsWith('http'))w='https://'+w;
+
+  // ── Postback al worker pasando el nombre del partido ─────────────────────
+  // El worker buscará el partido por nombre en gvPartidos y usará el ctl correcto
+  if(href&&w&&c){
+    try{
+      var res;
+      var pbm=href.match(/javascript:__doPostBack\(['"]([^'"]+)['"]\s*,\s*['"]([^'"]*)['"]\)/i);
+      if(pbm){
+        res=await fetch(w+'/postback',{
+          method:'POST',
+          headers:{'X-GP-Cookie':c,'X-GP-Pid':QN_PID,'Content-Type':'application/json'},
+          body:JSON.stringify({target:pbm[1],argument:pbm[2],matchName:matchName})
+        });
+      } else {
+        res=await fetch(w+'/page?url='+encodeURIComponent(href),{headers:{'X-GP-Cookie':c}});
+      }
+      if(res&&res.status===401){showToast('Sesión expirada — vuelve a iniciar sesión','warn');detailTr.remove();if(icon)icon.textContent='▾';return;}
+      if(res&&res.ok){
+        var pageHtml=await res.text();
+        var data=qnParseMatchPreds(pageHtml);
+        if(data){
+          if(data.myPred){
+            var hNorm=data.headers.map(function(h){return h.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');});
+            var uci=hNorm.findIndex(function(h){return /usuar/.test(h);});
+            var pci=hNorm.findIndex(function(h){return /pron|pred/.test(h);});
+            var alreadyIn=myUser&&data.rows.some(function(r){return (r[uci]||'').toLowerCase()===myUser.toLowerCase();});
+            if(!alreadyIn){
+              var myRow=data.headers.map(function(){return '—';});
+              if(uci>=0) myRow[uci]=myUser||'Yo';
+              if(pci>=0) myRow[pci]=data.myPred;
+              data.rows.unshift(myRow);
+              data.myRowIdx=0;
+            }
+          }
+          qnRenderMatchTable(matchName,data,targetEl);return;
+        }
+      }
+    }catch(e){}
+  }
+
+  // ── Fallback local ────────────────────────────────────────────────────────
+  if(QN_DATA&&QN_META.partidoIdx>=0){
+    var pdi=QN_META.partidoIdx;
+    function normS(s){return (s||'').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ');}
+    var mnNorm=normS(matchName);
+    var filteredRows=QN_DATA.rows.filter(function(row){return normS(row[pdi])===mnNorm;});
+    if(filteredRows.length>0){
+      var showCols=[];
+      QN_DATA.headers.forEach(function(h,i){if(i!==0&&i!==pdi) showCols.push(i);});
+      var myRowIdx2=-1;
+      var displayRows=filteredRows.map(function(row,ri){
+        var uv=(row[QN_META.nameIdx]||row[1]||'').toLowerCase();
+        if(myUser&&uv===myUser.toLowerCase()) myRowIdx2=ri;
+        return showCols.map(function(i){return row[i]||'—';});
+      });
+      var rd={headers:showCols.map(function(i){return QN_DATA.headers[i];}),rows:displayRows};
+      if(myRowIdx2>=0) rd.myRowIdx=myRowIdx2;
+      qnRenderMatchTable(matchName,rd,targetEl);return;
+    }
+  }
+
+  targetEl.innerHTML='<div style="padding:12px;color:var(--red-400);font-size:12px"><i class="ti ti-alert-circle"></i> No se encontraron pronósticos para <strong>'+matchName+'</strong></div>';
+}
 
 function renderQuiniela(){
   var w='';var u='';var c='';
@@ -3306,7 +3813,8 @@ function renderQuiniela(){
     document.getElementById('qn-login-box').style.display='none';
     document.getElementById('qn-connected-box').style.display='';
     document.getElementById('qn-username-lbl').textContent=u;
-    if(!document.getElementById('qn-content').innerHTML.trim()) qnLoadPool();
+    var qnc=document.getElementById('qn-content').innerHTML.trim();
+    if(!qnc||qnc.indexOf('Cargando quiniela')>=0) qnLoadPool();
   }
 }
 
@@ -3348,11 +3856,212 @@ async function qnLogin(){
   btn.style.opacity='';btn.style.pointerEvents='';
 }
 
+function qnRefreshAll(){
+  var posActive=document.getElementById('qn-tab-pos')&&document.getElementById('qn-tab-pos').classList.contains('active');
+  QN_STANDINGS=null;
+  if(posActive) qnLoadStandings(true); else qnLoadPool();
+}
+
 function qnLogout(){
   try{localStorage.removeItem('qn-cookie');localStorage.removeItem('qn-username');}catch(e){}
+  QN_STANDINGS=null;
   document.getElementById('qn-connected-box').style.display='none';
   document.getElementById('qn-login-box').style.display='';
   document.getElementById('qn-content').innerHTML='';
+  document.getElementById('qn-standings-content').innerHTML='';
+}
+
+function qnSwitchTab(tab){
+  document.querySelectorAll('.qn-tab').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('qn-tab-'+tab).classList.add('active');
+  var isPred=tab==='pred';
+  document.getElementById('qn-content').style.display=isPred?'':'none';
+  document.getElementById('qn-match-detail').style.display=isPred?'':'none';
+  document.getElementById('qn-standings-content').style.display=isPred?'none':'';
+  if(tab==='pos') qnLoadStandings();
+}
+
+async function qnLoadStandings(force){
+  var el=document.getElementById('qn-standings-content');
+  if(QN_STANDINGS&&!force){renderQnStandings(QN_STANDINGS);return;}
+  el.innerHTML='<div style="text-align:center;padding:30px;color:var(--text-500)"><i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Cargando posiciones...</div>';
+  var w='',c='';
+  try{w=localStorage.getItem('qn-worker')||'';c=localStorage.getItem('qn-cookie')||'';}catch(e){}
+  w=w.replace(/\/+$/,'');if(w&&!w.startsWith('http'))w='https://'+w;
+  try{
+    var res=await fetch(w+'/standings',{headers:{'X-GP-Cookie':c,'X-GP-Pid':QN_PID}});
+    if(res.status===401){showToast('Sesión expirada','warn');qnLogout();return;}
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    var html=await res.text();
+    var parsed=parseGPStandings(html);
+    if(!parsed){
+      el.innerHTML='<div style="text-align:center;padding:30px;color:var(--text-500)">No se encontró la tabla de posiciones.<br><span style="font-size:10px">Verifica que el pool tenga una sección de clasificación en GolPredictor.</span></div>';
+      return;
+    }
+    QN_STANDINGS=parsed;
+    renderQnStandings(parsed);
+  }catch(e){
+    el.innerHTML='<div style="padding:20px;color:var(--red-400)">Error: '+e.message+'</div>';
+  }
+}
+
+function parseGPStandings(html){
+  var parser=new DOMParser();
+  var doc=parser.parseFromString(html,'text/html');
+  var tables=Array.from(doc.querySelectorAll('table'));
+  if(!tables.length) return null;
+
+  /* Extraer nombre del usuario desde la página (saludo, nav, labels ASP.NET) */
+  var pageUser='';
+  var pgSelectors=['#ctl00_lblNombre','#ctl00_lblUsuario','#ctl00_lbNombre',
+    '#lblNombre','#lblUsuario','#lblUser','[id*="lblNom"],[id*="lblUser"]',
+    '.user-name','.username','#navUser'];
+  pgSelectors.forEach(function(s){
+    if(pageUser) return;
+    try{var el=doc.querySelector(s);if(el&&el.textContent.trim()) pageUser=el.textContent.trim();}catch(e){}
+  });
+  if(!pageUser){
+    /* Buscar patrón "Bienvenido, Nombre" o "Hola, Nombre" en el body */
+    var bodyTxt=doc.body?doc.body.innerText||doc.body.textContent:'';
+    var m=bodyTxt.match(/(?:bienvenido|bienvenida|hola)[,\s]+([^\n,;:<>]{2,40})/i);
+    if(m) pageUser=m[1].trim();
+  }
+  /* Guardar pageUser en localStorage para uso en renderQnStandings */
+  if(pageUser){try{localStorage.setItem('qn-display-name',pageUser);}catch(e){}}
+
+  var standTbl=null;
+  tables.forEach(function(t){
+    if(t.rows.length<3) return;
+    var hdrs=Array.from(t.rows[0].cells).map(function(c){
+      return (c.textContent||'').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+    }).join(' ');
+    var hasName=/partic|jugad|usuari|nombre|apodo|player/.test(hdrs);
+    var hasPts=/punt|ptos|pts|total|acum|score/.test(hdrs);
+    var hasPartido=/partido|match|horario/.test(hdrs);
+    var hasPron=/pronostic|pred/.test(hdrs);
+    if(hasName&&hasPts&&!hasPartido&&!hasPron) standTbl=t;
+  });
+  if(!standTbl) return null;
+  var headers=[],rows=[],myRowIdx=-1;
+  /* Detectar nombre idx provisionalmente para comparar contra pageUser */
+  var tmpNameIdx=1;
+  for(var i=0;i<standTbl.rows.length;i++){
+    var cells=Array.from(standTbl.rows[i].cells).map(function(c){return c.textContent.trim();});
+    if(i===0){
+      headers=cells;
+      headers.forEach(function(h,hi){
+        var hn=h.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+        if(/partic|jugad|usuari|nombre|apodo/.test(hn)) tmpNameIdx=hi;
+      });
+      continue;
+    }
+    if(!cells.some(function(c){return c!==''})) continue;
+    /* Match por pageUser o por estilo HTML */
+    if(myRowIdx<0&&pageUser){
+      var nc=(cells[tmpNameIdx]||'').toLowerCase();
+      var pu=pageUser.toLowerCase();
+      if(nc.includes(pu)||pu.includes(nc)) myRowIdx=rows.length;
+    }
+    rows.push(cells);
+  }
+  return (headers.length&&rows.length)?{headers:headers,rows:rows,myRowIdx:myRowIdx}:null;
+}
+
+function renderQnStandings(data){
+  var el=document.getElementById('qn-standings-content');
+  var nameIdx=1,ptsIdx=-1;
+  data.headers.forEach(function(h,i){
+    var hn=(h||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+    if(/partic|jugad|usuari|nombre|apodo/.test(hn)) nameIdx=i;
+    if(ptsIdx<0&&/punt|ptos|pts|total|acum/i.test(hn)) ptsIdx=i;
+  });
+  if(ptsIdx<0) ptsIdx=data.headers.length>1?data.headers.length-1:1;
+  var myUser='';try{myUser=(localStorage.getItem('qn-username')||'').toLowerCase();}catch(e){}
+  var myDisplayName='';try{myDisplayName=(localStorage.getItem('qn-display-name')||'').toLowerCase();}catch(e){}
+  var medals=['🥇','🥈','🥉'];
+
+  /* Construir lista de tokens a buscar (todos los que tengamos disponibles) */
+  var myTokens=[];
+  if(myDisplayName) myTokens.push(myDisplayName);
+  if(myUser) myTokens.push(myUser);
+  var shortUser=myUser.split('@')[0].split('.')[0];
+  if(shortUser.length>2&&myTokens.indexOf(shortUser)<0) myTokens.push(shortUser);
+
+  /* Pre-scan: posición y puntos del usuario logueado */
+  var myPos=null, myPts=null;
+  var myRowIdxFromParser=(typeof data.myRowIdx==='number'&&data.myRowIdx>=0)?data.myRowIdx:-1;
+  data.rows.forEach(function(row,ri){
+    if(myPos!==null) return;
+    var nameCell=(row[nameIdx]||'').toLowerCase();
+    var matchByParser=ri===myRowIdxFromParser;
+    var matchByToken=myTokens.some(function(t){
+      return t&&(nameCell.includes(t)||t.includes(nameCell));
+    });
+    if(matchByParser||matchByToken){
+      myPos=parseInt(row[0])||ri+1;
+      myPts=row[ptsIdx]!=null&&row[ptsIdx]!==''?row[ptsIdx]:null;
+      myRowIdxFromParser=ri;
+    }
+  });
+
+  /* Card resumen Mi Posición — siempre visible con datos de posición si se detecta */
+  var posLabel=myPos!==null?(myPos===1?'🥇':myPos===2?'🥈':myPos===3?'🥉':'#'+myPos):'–';
+  var html='<div class="card" style="margin-bottom:12px;padding:10px 14px">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
+      +'<div style="display:flex;align-items:center;gap:10px">'
+        +'<div>'
+          +'<div style="font-size:10px;color:var(--text-500);margin-bottom:2px">Mi Posición</div>'
+          +'<div style="font-size:28px;font-weight:800;color:var(--blue-400);line-height:1">'+posLabel+'</div>'
+        +'</div>'
+        +(myPts!==null?'<div style="border-left:1px solid var(--bg-600);padding-left:10px">'
+          +'<div style="font-size:10px;color:var(--text-500);margin-bottom:2px">Puntaje</div>'
+          +'<div style="font-size:22px;font-weight:800;color:var(--gold);line-height:1">'+myPts+'<span style="font-size:11px;font-weight:400;color:var(--text-500);margin-left:3px">pts</span></div>'
+        +'</div>':'')
+      +'</div>'
+      +'<div style="font-size:10px;color:var(--text-500)">de '+data.rows.length+' participantes</div>'
+    +'</div>'
+  +'</div>';
+
+  var noMatch=myRowIdxFromParser<0;
+  var hintTip=noMatch?'<div style="font-size:10px;color:var(--text-500);margin-bottom:6px;display:flex;align-items:center;gap:4px"><i class="ti ti-hand-click"></i> Toca tu fila para marcarla como la tuya</div>':'';
+
+  html+='<div class="card" style="overflow-x:auto">'+hintTip+'<table class="qn-table"><thead><tr>';
+  data.headers.forEach(function(h,i){
+    if(i===0) html+='<th style="width:42px;text-align:center">#</th>';
+    else if(i===ptsIdx) html+='<th style="text-align:right">'+h+'</th>';
+    else html+='<th>'+h+'</th>';
+  });
+  html+='</tr></thead><tbody>';
+  data.rows.forEach(function(row,ri){
+    var pos=parseInt(row[0])||ri+1;
+    var isMe=ri===myRowIdxFromParser;
+    var rowStyle=isMe?'background:rgba(96,165,250,.12);outline:1px solid rgba(96,165,250,.3);':'';
+    var rowClick=!isMe?'onclick="qnMarkMeRow(this,\''+encodeURIComponent(row[nameIdx]||'')+'\')" style="'+rowStyle+'cursor:pointer" title="Marcar como yo"':'style="'+rowStyle+'"';
+    html+='<tr '+rowClick+'>';
+    row.forEach(function(cell,ci){
+      if(ci===0){
+        var med=medals[pos-1]||'';
+        html+='<td class="qn-pos"'+(isMe?' style="color:var(--blue-400)"':'')+'>'+( med||pos)+'</td>';
+      }else if(ci===ptsIdx){
+        html+='<td class="qn-pts" style="text-align:right;font-size:15px'+(isMe?';color:var(--gold)':'')+'">'+cell+'</td>';
+      }else if(ci===nameIdx){
+        var nameHtml=isMe?'<span style="color:var(--blue-400);font-weight:700">'+cell+' <i class="ti ti-user" style="font-size:10px"></i></span>':cell;
+        html+='<td>'+nameHtml+'</td>';
+      }else{
+        html+='<td>'+cell+'</td>';
+      }
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table></div>';
+  el.innerHTML=html;
+}
+
+function qnMarkMeRow(tr, encodedName){
+  var name=decodeURIComponent(encodedName);
+  try{localStorage.setItem('qn-display-name',name.toLowerCase());}catch(e){}
+  /* Re-renderizar con el nuevo display name */
+  if(typeof QN_STANDINGS!=='undefined'&&QN_STANDINGS) renderQnStandings(QN_STANDINGS);
 }
 
 async function qnLoadPool(){
@@ -3378,9 +4087,11 @@ async function qnLoadPool(){
       showToast('Quiniela actualizada ('+pages+' pág.)'+( dbg?' · '+dbg:''),'ok');
     }
   }catch(e){
-    document.getElementById('qn-content').innerHTML='<div style="padding:20px;color:var(--red-400)">Error: '+e.message+'</div>';
+    console.error('qnLoadPool:',e);
+    try{document.getElementById('qn-content').innerHTML='<div style="padding:20px;color:var(--red-400)">Error: '+(e&&e.message?e.message:String(e))+'</div>';}catch(ex){}
+  }finally{
+    try{btn.style.opacity='';btn.style.pointerEvents='';}catch(ex){}
   }
-  btn.style.opacity='';btn.style.pointerEvents='';
 }
 
 function parseGPHtml(html){
@@ -3402,10 +4113,12 @@ function parseGPHtml(html){
     return ne.every(function(c){return /^[\d\s.<>«»…\-]+$/.test(c)&&c.trim().length<=4;});
   }
 
+  var hrefs=[];
   for(var i=0;i<mainTbl.rows.length;i++){
     var cells=Array.from(mainTbl.rows[i].cells).map(function(c){return c.textContent.trim();});
+    var rowHrefs=Array.from(mainTbl.rows[i].cells).map(function(c){var a=c.querySelector('a[href]');return a?a.getAttribute('href'):'';});
     if(i===0){headers=cells;}
-    else if(cells.some(function(c){return c!==''})&&!isPager(cells)){rows.push(cells);}
+    else if(cells.some(function(c){return c!==''})&&!isPager(cells)){rows.push(cells);hrefs.push(rowHrefs);}
   }
   // Filas adicionales de otras tablas con mismo ancho (páginas extra)
   tables.forEach(function(tbl){
@@ -3413,13 +4126,32 @@ function parseGPHtml(html){
     if(tbl.rows[0].cells.length!==colCount) return;
     for(var i=1;i<tbl.rows.length;i++){
       var cells=Array.from(tbl.rows[i].cells).map(function(c){return c.textContent.trim();});
-      if(cells.some(function(c){return c!==''})&&!isPager(cells)) rows.push(cells);
+      var rowHrefs=Array.from(tbl.rows[i].cells).map(function(c){var a=c.querySelector('a[href]');return a?a.getAttribute('href'):'';});
+      if(cells.some(function(c){return c!==''})&&!isPager(cells)){rows.push(cells);hrefs.push(rowHrefs);}
     }
   });
-  return{poolName:poolName,headers:headers,rows:rows};
+  // Extraer campos ocultos del formulario (primera ocurrencia = página 1 = estado original de gvPartidos)
+  var formFields={};
+  Array.from(doc.querySelectorAll('input[type="hidden"]')).forEach(function(inp){
+    var nm=inp.name||'';
+    if(nm&&!(nm in formFields)) formFields[nm]=inp.value||'';
+  });
+
+  return{poolName:poolName,headers:headers,rows:rows,hrefs:hrefs,formFields:formFields};
 }
 
 function renderQnTable(data,pages){
+  QN_DATA=data;
+  document.getElementById('qn-match-detail').innerHTML='';
+
+  /* Detectar columna nombre participante */
+  var nameIdx=1;
+  data.headers.forEach(function(h,i){
+    if(i===0) return;
+    var hn=h.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+    if(/partic|usuar|nombre|jugad|person|apodo/.test(hn)) nameIdx=i;
+  });
+
   /* Detectar columna de puntos — primero por nombre, luego la columna más numérica */
   var ptsIdx=-1;
   data.headers.forEach(function(h,i){
@@ -3434,14 +4166,15 @@ function renderQnTable(data,pages){
     numCount.forEach(function(n,i){if(i>0&&n>best){best=n;ptsIdx=i;}});
     if(ptsIdx<0) ptsIdx=data.headers.length-1;
   }
-
-  /* Detectar columna "Partido" y columna "Pronóstico" */
-  var partidoIdx=-1, pronosticoIdx=-1;
+  /* Detectar columna "Partido", "Pronóstico" y "Horario" */
+  var partidoIdx=-1, pronosticoIdx=-1, horarioIdx=-1;
   data.headers.forEach(function(h,i){
     var hn=h.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     if(partidoIdx<0&&/partido|match|equipo|vs\b/.test(hn)) partidoIdx=i;
     if(pronosticoIdx<0&&/pron|pred|result|gol|marcad/.test(hn)) pronosticoIdx=i;
+    if(horarioIdx<0&&/hora|fecha|date|time|sched|jornada/.test(hn)) horarioIdx=i;
   });
+  QN_META={ptsIdx:ptsIdx,lastIdx:data.headers.length-1,nameIdx:nameIdx,partidoIdx:partidoIdx,pronosticoIdx:pronosticoIdx};
 
   /* Extraer equipos del texto de una celda "México vs Argentina" */
   function teamsFromCell(txt){
@@ -3456,38 +4189,52 @@ function renderQnTable(data,pages){
     return null;
   }
 
-  /* Suma total */
-  function parseVal(v){return parseFloat((v||'').toString().replace(/[^0-9.\-]/g,''))||0;}
+  /* Sumatoria de puntos — en esta tabla cada fila es un partido del usuario */
+  function parseVal(v){return parseFloat((v||'').toString().replace(/[^0-9]/g,''))||0;}
   var totalPts=0;
   data.rows.forEach(function(row){totalPts+=parseVal(row[ptsIdx]);});
 
   /* Encabezado pool */
   var html='<div class="card" style="margin-bottom:12px;padding:10px 14px">';
-  html+='<div class="card-title"><i class="ti ti-device-gamepad-2"></i> '+data.poolName+'</div>';
+  html+='<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">';
+  html+='<div class="card-title" style="margin:0"><i class="ti ti-device-gamepad-2"></i> '+data.poolName+'</div>';
+  if(totalPts>0){
+    html+='<div style="display:flex;align-items:center;gap:6px">'
+      +'<span style="font-size:11px;color:var(--text-500)">Mi puntaje</span>'
+      +'<span style="font-size:26px;font-weight:800;color:var(--gold);line-height:1">'+totalPts+'</span>'
+      +'<span style="font-size:11px;color:var(--text-500)">pts</span>'
+    +'</div>';
+  }
+  html+='</div>';
   html+='</div>';
 
   /* Tabla */
   html+='<div class="card" style="overflow-x:auto"><table class="qn-table"><thead><tr>';
   var lastIdx=data.headers.length-1;
   data.headers.forEach(function(h,i){
-    if(i===lastIdx) html+='<th style="text-align:center">ℹ</th>';
+    var isMatch=i!==0&&i!==nameIdx&&i!==ptsIdx&&i!==lastIdx;
+    var mobHide=(i===lastIdx||i===horarioIdx)?' class="qn-hide-mob"':'';
+    if(i===lastIdx) html+='<th'+mobHide+' style="text-align:center">&#x2139;</th>';
     else if(i===ptsIdx) html+='<th>'+h+' <span style="color:var(--gold);font-weight:800">('+totalPts+')</span></th>';
-    else html+='<th'+(i===0?' style="width:36px;text-align:center"':'')+'>'+h+'</th>';
+    else if(i===0) html+='<th style="width:36px;text-align:center">'+h+'</th>';
+    else if(isMatch) html+='<th'+mobHide+' style="white-space:nowrap">'+h+'</th>';
+    else html+='<th'+mobHide+'>'+h+'</th>';
   });
   html+='</tr></thead><tbody>';
 
   data.rows.forEach(function(row,ri){
     var posNum=parseInt(row[0])||ri+1;
-    var medal=posNum===1?'gold':posNum===2?'silver':posNum===3?'bronze':'';
-    var cls=medal?'qn-'+medal:'';
     html+='<tr>';
     row.forEach(function(cell,ci){
       if(ci===0){
         html+='<td class="qn-pos">'+posNum+'</td>';
       } else if(ci===ptsIdx&&ci!==lastIdx){
-        html+='<td class="qn-pts '+cls+'">'+cell+'</td>';
+        html+='<td class="qn-pts">'+cell+'</td>';
       } else if(ci===lastIdx){
-        html+='<td style="text-align:center"><div class="qn-info-wrap"><button class="qn-info-btn" onclick="this.classList.toggle(\'active\')">ℹ</button><span class="qn-tip">'+data.headers[lastIdx]+': <strong>'+cell+'</strong></span></div></td>';
+        html+='<td class="qn-hide-mob" style="text-align:center"><div class="qn-info-wrap"><button class="qn-info-btn" onclick="this.classList.toggle(\'active\')">&#x2139;</button><span class="qn-tip">'+data.headers[lastIdx]+': <strong>'+cell+'</strong></span></div></td>';
+      } else if(ci===partidoIdx&&cell){
+        var href=(data.hrefs&&data.hrefs[ri]&&data.hrefs[ri][ci])||'';
+        html+='<td class="qn-partido-cell" style="cursor:pointer;color:var(--blue-400)" onclick="qnFetchMatchDetail(\''+cell.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\',\''+href.replace(/'/g,"\\'")+'\',this)">'+cell+' <span class="qn-expand-icon" style="font-size:20px;line-height:1;vertical-align:middle;display:inline-block;transition:transform .2s">▾</span></td>';
       } else if((ci===pronosticoIdx||(pronosticoIdx<0&&ci!==partidoIdx))&&(cell==='-'||cell===''||cell==='--')){
         /* Celda vacía/sin pronóstico → botón Predecir si hay partido identificable */
         var teams=null;
@@ -3502,6 +4249,8 @@ function renderQnTable(data,pages){
         } else {
           html+='<td style="color:var(--text-600);text-align:center">'+cell+'</td>';
         }
+      } else if(ci===horarioIdx){
+        html+='<td class="qn-hide-mob">'+cell+'</td>';
       } else {
         html+='<td>'+cell+'</td>';
       }
@@ -3512,18 +4261,26 @@ function renderQnTable(data,pages){
   /* Fila total */
   html+='<tr style="border-top:2px solid var(--bg-500);background:var(--bg-700)">';
   data.headers.forEach(function(h,i){
+    var tcls=(i===lastIdx||i===horarioIdx)?' class="qn-hide-mob"':'';
     if(i===0)html+='<td style="text-align:center;font-size:10px;color:var(--text-500)">Σ</td>';
     else if(i===ptsIdx)html+='<td style="font-weight:700;color:var(--gold);font-size:13px">'+totalPts+'</td>';
-    else html+='<td></td>';
+    else html+='<td'+tcls+'></td>';
   });
   html+='</tr>';
 
   html+='</tbody></table></div>';
-  html+='<div style="text-align:center;margin-top:10px;font-size:10px;color:var(--text-600)">'+data.rows.length+' participantes · '+pages+' pág.</div>';
+  html+='<div style="text-align:center;margin-top:10px;font-size:10px;color:var(--text-600)">'+data.rows.length+' participantes · '+pages+' pág.'+(partidoIdx>=0?' · <span style="color:var(--blue-400)">Clic en un partido ▾ para ver todos los pronósticos</span>':'')+'</div>';
   document.getElementById('qn-content').innerHTML=html;
 }
 
 
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('./sw.js').catch(function(){});
+  });
+}
 </script>
 </body>
 </html>
