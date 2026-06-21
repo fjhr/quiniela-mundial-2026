@@ -4230,7 +4230,7 @@ function renderQnTable(data,pages){
     if(i===lastIdx) html+='<th'+mobHide+' style="text-align:center">&#x2139;</th>';
     else if(i===ptsIdx) html+='<th>'+h+' <span style="color:var(--gold);font-weight:800">('+totalPts+')</span></th>';
     else if(i===0) html+='<th style="width:36px;text-align:center">'+h+'</th>';
-    else if(i===nameIdx) html+='<th style="min-width:160px;width:160px">'+h+'</th>';
+    else if(i===nameIdx&&i!==horarioIdx&&i!==lastIdx) html+='<th style="min-width:160px;width:160px">'+h+'</th>';
     else if(isMatch) html+='<th'+mobHide+' style="white-space:nowrap">'+h+'</th>';
     else html+='<th'+mobHide+'>'+h+'</th>';
   });
@@ -4265,7 +4265,7 @@ function renderQnTable(data,pages){
         }
       } else if(ci===horarioIdx){
         html+='<td class="qn-hide-mob">'+cell+'</td>';
-      } else if(ci===nameIdx){
+      } else if(ci===nameIdx&&ci!==horarioIdx){
         html+='<td style="min-width:160px;width:160px">'+cell+'</td>';
       } else {
         html+='<td>'+cell+'</td>';
