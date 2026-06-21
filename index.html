@@ -491,6 +491,10 @@ select option{background:var(--bg-800)}
   .qn-detail-td table{font-size:10px}
   .qn-detail-td table td,.qn-detail-td table th{padding:4px 5px}
   .qn-detail-td table .qn-nombre-col{min-width:160px;width:160px}
+  /* Columnas Pronóstico / Resultado — compactas en móvil */
+  .mob-hide-label{display:none}
+  .mob-short-label{display:inline}
+  td[style*="white-space:nowrap"]{padding:5px 3px;text-align:center;font-size:10px}
 }
 
 /* ══════════════════════════════════════
@@ -580,6 +584,8 @@ select option{background:var(--bg-800)}
 .qn-gold{color:#f59e0b}.qn-silver{color:#94a3b8}.qn-bronze{color:#b45309}
 .qn-pts{font-weight:800;font-size:14px;color:var(--text-100)}
 .qn-partido-cell{white-space:nowrap}
+.mob-hide-label{display:inline}
+.mob-short-label{display:none}
 .qn-info-wrap{position:relative;display:inline-flex;justify-content:center}
 .qn-info-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(99,102,241,.18);border:1.5px solid rgba(99,102,241,.45);color:var(--indigo-300);font-size:11px;font-weight:800;cursor:pointer;transition:background .15s;line-height:1;padding:0}
 .qn-info-btn:hover,.qn-info-btn.active{background:rgba(99,102,241,.35)}
@@ -4233,6 +4239,8 @@ function renderQnTable(data,pages){
     else if(i===0) html+='<th style="width:36px;text-align:center">'+h+'</th>';
     else if(i===nameIdx&&i!==horarioIdx&&i!==lastIdx) html+='<th style="min-width:160px;width:160px">'+h+'</th>';
     else if(i===partidoIdx) html+='<th style="min-width:160px;white-space:nowrap">'+h+'</th>';
+    else if(i===pronosticoIdx) html+='<th style="text-align:center;padding:5px 4px"><span class="mob-hide-label">'+h+'</span><span class="mob-short-label">Pron.</span></th>';
+    else if(i===resultadoIdx) html+='<th style="text-align:center;padding:5px 4px"><span class="mob-hide-label">'+h+'</span><span class="mob-short-label">Res.</span></th>';
     else if(isMatch) html+='<th'+mobHide+' style="white-space:nowrap">'+h+'</th>';
     else html+='<th'+mobHide+'>'+h+'</th>';
   });
