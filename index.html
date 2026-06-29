@@ -2046,7 +2046,9 @@ function applyESPNTimes(events){
   events.forEach(function(ev){
     var dt=ev.date||((ev.competitions||[])[0]||{}).date||'';
     if(!dt)return;
-    var day=dt.substring(0,10);
+    // Usar fecha LOCAL (no UTC) para que partidos nocturnos caigan en el día correcto
+    var kd=new Date(dt);
+    var day=kd.getFullYear()+'-'+String(kd.getMonth()+1).padStart(2,'0')+'-'+String(kd.getDate()).padStart(2,'0');
     if(!byDate[day])byDate[day]=[];
     byDate[day].push(dt);
   });
@@ -2063,7 +2065,8 @@ function applyESPNTimes(events){
   Object.keys(schedByDate).forEach(function(d){
     var evTimes=byDate[d]||[];
     schedByDate[d].forEach(function(id,i){
-      if(!MATCH_TIMES[id]&&evTimes[i]){MATCH_TIMES[id]=evTimes[i];changed=true;}
+      // Siempre sobreescribir para limpiar valores stale de localStorage
+      if(evTimes[i]){MATCH_TIMES[id]=evTimes[i];changed=true;}
     });
   });
   if(changed)try{localStorage.setItem('match-times',JSON.stringify(MATCH_TIMES));}catch(e){}
