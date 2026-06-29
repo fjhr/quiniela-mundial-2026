@@ -2046,9 +2046,9 @@ function applyESPNTimes(events){
   events.forEach(function(ev){
     var dt=ev.date||((ev.competitions||[])[0]||{}).date||'';
     if(!dt)return;
-    // Usar fecha LOCAL (no UTC) para que partidos nocturnos caigan en el día correcto
-    var kd=new Date(dt);
-    var day=kd.getFullYear()+'-'+String(kd.getMonth()+1).padStart(2,'0')+'-'+String(kd.getDate()).padStart(2,'0');
+    // Offset fijo UTC-5 (CDT, venues América): evita cruces de medianoche UTC
+    var kd=new Date(new Date(dt).getTime()-5*3600000);
+    var day=kd.getUTCFullYear()+'-'+String(kd.getUTCMonth()+1).padStart(2,'0')+'-'+String(kd.getUTCDate()).padStart(2,'0');
     if(!byDate[day])byDate[day]=[];
     byDate[day].push(dt);
   });
