@@ -12,6 +12,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Quiniela 2026">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
 <style>
@@ -1128,7 +1130,7 @@ select option{background:var(--bg-800)}
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 'use strict';
 // ═══════════════════════════════════════════════════════
@@ -1678,22 +1680,29 @@ function renderBracket(){
     const t1=resolveKOTeam(kb.sh)||kb.sh;
     const t2=resolveKOTeam(kb.sa)||kb.sa;
     const known=resolveKOTeam(kb.sh)&&resolveKOTeam(kb.sa);
-    const pr=(known&&T[t1]&&T[t2])?sim(t1,t2):null;
-    const fav=pr&&pr.pW>pr.pL;
     const koM=RES_KO.find(k=>k.id===kb.id);
-    const bkDt=!(koM&&koM.p)?fmtMatchDT(kb.id):null;
+    const played=!!(koM&&koM.p);
+    const pr=(!played&&known&&T[t1]&&T[t2])?sim(t1,t2):null;
+    const fav=pr&&pr.pW>pr.pL;
+    const winH=played&&(koM.hg>koM.ag||koM.pens==='h');
+    const winA=played&&(koM.ag>koM.hg||koM.pens==='a');
+    const bkDt=!played?fmtMatchDT(kb.id):null;
+    const scoreHtml=played
+      ?`<div style="text-align:center;margin:4px 0;font-size:13px;font-weight:800;letter-spacing:.05em;color:var(--text-200)">${koM.hg} – ${koM.ag}${koM.pens?` <span style="font-size:9px;font-weight:400;color:var(--text-500)">(pen.)</span>`:''}</div>`
+      :'';
     return`<div class="bk-match">
-      <div class="bk-team ${fav?'fav':''}">
+      <div class="bk-team ${winH?'fav':(!played&&fav?'fav':'')}">
         ${T[t1]?.fl||'🏳️'} <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t1}</span>
-        ${pr?`<span class="bk-pct">${(pr.pW*100).toFixed(0)}%</span>`:''}
+        ${!played&&pr?`<span class="bk-pct">${(pr.pW*100).toFixed(0)}%</span>`:''}
       </div>
-      <div class="bk-team ${!fav&&pr?'fav':''}">
+      ${scoreHtml}
+      <div class="bk-team ${winA?'fav':(!played&&!fav&&pr?'fav':'')}">
         ${T[t2]?.fl||'🏳️'} <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t2}</span>
-        ${pr?`<span class="bk-pct">${(pr.pL*100).toFixed(0)}%</span>`:''}
+        ${!played&&pr?`<span class="bk-pct">${(pr.pL*100).toFixed(0)}%</span>`:''}
       </div>
       <div style="font-size:9px;color:var(--text-600);margin-top:5px;text-align:center">${slotLbl(kb.sh)} vs ${slotLbl(kb.sa)}</div>
       ${bkDt?`<div style="font-size:9px;color:var(--blue-400);font-weight:600;text-align:center;margin-top:3px">${bkDt}</div>`:''}
-      ${known?`<button class="btn-pred-cal" style="width:100%;margin-top:6px" data-h="${t1}" data-a="${t2}" onclick="goToPredictor(this.dataset.h,this.dataset.a)">🔮 Predecir</button><button class="btn-pred-cal" style="width:100%;margin-top:4px;background:rgba(99,102,241,.2);color:#818cf8" data-h="${t1}" data-a="${t2}" onclick="goToH2H(this.dataset.h,this.dataset.a)">⚔️ H2H</button>`:''}
+      ${known&&!played?`<button class="btn-pred-cal" style="width:100%;margin-top:6px" data-h="${t1}" data-a="${t2}" onclick="goToPredictor(this.dataset.h,this.dataset.a)">🔮 Predecir</button><button class="btn-pred-cal" style="width:100%;margin-top:4px;background:rgba(99,102,241,.2);color:#818cf8" data-h="${t1}" data-a="${t2}" onclick="goToH2H(this.dataset.h,this.dataset.a)">⚔️ H2H</button>`:''}
     </div>`;
   }
   const r32=KO_BRACKET.filter(k=>k.rnd==='R32');
@@ -2177,10 +2186,10 @@ function resetResults(){
   initEscSelect();
   // Render
   renderStand();renderMatches();updateSB();updateLivePill();
-  // Auto-sync on load
-  syncResults();
-  // Default panel — deferred so SCHED/VENUES consts are fully initialized
+  // Default panel primero — usuario ve contenido de inmediato
   setTimeout(function(){ navTo('cal'); }, 0);
+  // Auto-sync diferido: no bloquea el render inicial
+  setTimeout(syncResults, 1200);
 })();
 // ═══════════════════════════════════════════════════════
 // MONTE CARLO SIMULATOR — FIFA 2026 (48 equipos, 12 grupos)
