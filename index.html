@@ -2248,70 +2248,81 @@ function runMonteCarlo(){
 
     for(var n=0;n<N;n++){
       // ── Fase de Grupos ──
-      var winners=[], runners=[], thirds=[];
+      var simStd={};  // g → [{team,pts,gd}]
+      var thirds=[];
       grpKeys.forEach(function(g){
         var res=mcGroup(g);
-        winners.push(res[0].team);
-        runners.push(res[1].team);
-        thirds.push({team:res[2].team, pts:res[2].pts, gd:res[2].gd});
+        simStd[g]=res;
         counts[res[0].team].group++;
         counts[res[1].team].group++;
+        thirds.push({team:res[2].team,pts:res[2].pts,gd:res[2].gd,g:g});
       });
+      // 8 mejores terceros para conteo de clasificados
+      thirds.slice().sort(function(a,b){return b.pts-a.pts||b.gd-a.gd;})
+        .slice(0,8).forEach(function(x){counts[x.team].group++;});
 
-      // Mejores 8 terceros (por pts, luego gd)
-      thirds.sort(function(a,b){return b.pts-a.pts||b.gd-a.gd;});
-      var best8=thirds.slice(0,8).map(function(x){return x.team;});
-      best8.forEach(function(t){counts[t].group++;});
+      // Resolver slot del bracket según resultado simulado
+      function resolveSimSlot(slot){
+        if(/^1[A-L]$/.test(slot)) return simStd[slot[1]][0].team;
+        if(/^2[A-L]$/.test(slot)) return simStd[slot[1]][1].team;
+        if(/^3[A-L]$/.test(slot)){
+          var t=thirds.find(function(x){return x.g===slot[1];});
+          return t?t.team:'';
+        }
+        return '';
+      }
 
-      // 32 clasificados: 12 ganadores + 12 segundos + 8 mejores terceros
-      // R32: emparejar ganadores vs terceros/segundos (simplificado: 16 cruces aleatorios entre clasificados)
-      // Para mantener la aleatoriedad del bracket, emparejamos los 16 partidos así:
-      // ganador[i] vs runner[i+1 mod 12] para primeros 8 pares; resto con mejores terceros
-      var r32bracket=[];
-      for(var i=0;i<8;i++){
-        r32bracket.push([winners[i], runners[(i+1)%12]]);
-      }
-      for(var i=0;i<4;i++){
-        r32bracket.push([winners[8+i], best8[i]]);
-      }
-      // 4 partidos: runners vs best8 restantes
-      for(var i=0;i<4;i++){
-        r32bracket.push([runners[8+i], best8[4+i]]);
-      }
-      // r32bracket tiene 16 partidos → 16 ganadores
-      var r16teams=r32bracket.map(function(pair){
-        var w=mcMatch(pair[0],pair[1]);
+      // Mapa id → equipo ganador para propagar el bracket
+      var rw={};
+
+      // ── R32 (bracket real FIFA 2026) ──
+      KO_BRACKET.filter(function(k){return k.rnd==='R32';}).forEach(function(kb){
+        var t1=resolveSimSlot(kb.sh), t2=resolveSimSlot(kb.sa);
+        if(!t1||!t2) return;
+        var w=mcMatch(t1,t2);
+        rw[kb.id]=w;
         counts[w].r16++;
-        return w;
       });
 
-      // ── R16 (8 partidos) ──
-      var qfTeams=[];
-      for(var i=0;i<16;i+=2){
-        var w=mcMatch(r16teams[i],r16teams[i+1]);
+      // Resolver slot W/L propagando winners
+      function resolveRW(slot){
+        if(slot.startsWith('W')) return rw[parseInt(slot.slice(1))]||'';
+        return '';
+      }
+
+      // ── R16 ──
+      KO_BRACKET.filter(function(k){return k.rnd==='R16';}).forEach(function(kb){
+        var t1=resolveRW(kb.sh), t2=resolveRW(kb.sa);
+        if(!t1||!t2) return;
+        var w=mcMatch(t1,t2);
+        rw[kb.id]=w;
         counts[w].qf++;
-        qfTeams.push(w);
-      }
+      });
 
-      // ── QF (4 partidos) ──
-      var sfTeams=[];
-      for(var i=0;i<8;i+=2){
-        var w=mcMatch(qfTeams[i],qfTeams[i+1]);
+      // ── QF ──
+      KO_BRACKET.filter(function(k){return k.rnd==='QF';}).forEach(function(kb){
+        var t1=resolveRW(kb.sh), t2=resolveRW(kb.sa);
+        if(!t1||!t2) return;
+        var w=mcMatch(t1,t2);
+        rw[kb.id]=w;
         counts[w].sf++;
-        sfTeams.push(w);
-      }
+      });
 
-      // ── SF (2 partidos) ──
-      var finalists=[];
-      for(var i=0;i<4;i+=2){
-        var w=mcMatch(sfTeams[i],sfTeams[i+1]);
+      // ── SF ──
+      KO_BRACKET.filter(function(k){return k.rnd==='SF';}).forEach(function(kb){
+        var t1=resolveRW(kb.sh), t2=resolveRW(kb.sa);
+        if(!t1||!t2) return;
+        var w=mcMatch(t1,t2);
+        rw[kb.id]=w;
         counts[w].final++;
-        finalists.push(w);
-      }
+      });
 
       // ── Final ──
-      var champ=mcMatch(finalists[0],finalists[1]);
-      counts[champ].champion++;
+      var fin=KO_BRACKET.find(function(k){return k.rnd==='Final';});
+      if(fin){
+        var t1=resolveRW(fin.sh), t2=resolveRW(fin.sa);
+        if(t1&&t2){ var champ=mcMatch(t1,t2); counts[champ].champion++; }
+      }
     }
 
     mcLastResults={counts:counts,N:N};
