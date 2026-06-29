@@ -3098,20 +3098,22 @@ var SCHED={
   69:{dt:"2026-07-01",v:"EMP"}, 70:{dt:"2026-07-01",v:"BCP"},
   71:{dt:"2026-07-01",v:"ARR"}, 72:{dt:"2026-07-01",v:"BMO"},
   // ── Ronda de 32 (R32) — Jun 28–Jul 3 ──
-  73:{dt:"2026-06-28"}, 74:{dt:"2026-06-28"}, 85:{dt:"2026-06-28"}, 86:{dt:"2026-06-28"},
-  75:{dt:"2026-06-29"}, 76:{dt:"2026-06-29"}, 87:{dt:"2026-06-29"}, 88:{dt:"2026-06-29"},
-  77:{dt:"2026-06-30"}, 78:{dt:"2026-06-30"}, 79:{dt:"2026-06-30"}, 80:{dt:"2026-06-30"},
-  81:{dt:"2026-07-01"}, 82:{dt:"2026-07-01"}, 83:{dt:"2026-07-01"}, 84:{dt:"2026-07-01"},
-  // ── Octavos de Final (R16) — Jul 5–8 ──
-  89:{dt:"2026-07-05"}, 90:{dt:"2026-07-05"},
-  91:{dt:"2026-07-06"}, 92:{dt:"2026-07-06"},
-  93:{dt:"2026-07-07"}, 94:{dt:"2026-07-07"},
-  95:{dt:"2026-07-08"}, 96:{dt:"2026-07-08"},
-  // ── Cuartos de Final (QF) — Jul 10–11 ──
-  97:{dt:"2026-07-10"}, 98:{dt:"2026-07-10"},
-  99:{dt:"2026-07-11"}, 100:{dt:"2026-07-11"},
-  // ── Semifinales — Jul 13 y 14 ──
-  101:{dt:"2026-07-13"}, 102:{dt:"2026-07-14"},
+  73:{dt:"2026-06-28"},
+  74:{dt:"2026-06-29"},75:{dt:"2026-06-29"},76:{dt:"2026-06-29"},
+  77:{dt:"2026-06-30"},78:{dt:"2026-06-30"},79:{dt:"2026-06-30"},
+  80:{dt:"2026-07-01"},81:{dt:"2026-07-01"},82:{dt:"2026-07-01"},
+  83:{dt:"2026-07-02"},84:{dt:"2026-07-02"},85:{dt:"2026-07-02"},
+  86:{dt:"2026-07-03"},87:{dt:"2026-07-03"},88:{dt:"2026-07-03"},
+  // ── Octavos de Final (R16) — Jul 4–7 ──
+  89:{dt:"2026-07-04"},90:{dt:"2026-07-04"},
+  91:{dt:"2026-07-05"},92:{dt:"2026-07-05"},
+  93:{dt:"2026-07-06"},94:{dt:"2026-07-06"},
+  95:{dt:"2026-07-07"},96:{dt:"2026-07-07"},
+  // ── Cuartos de Final (QF) — Jul 9–11 ──
+  97:{dt:"2026-07-09"},98:{dt:"2026-07-10"},
+  99:{dt:"2026-07-10"},100:{dt:"2026-07-11"},
+  // ── Semifinales — Jul 14–15 ──
+  101:{dt:"2026-07-14"},102:{dt:"2026-07-15"},
   // ── Tercer lugar y Final ──
   103:{dt:"2026-07-17"}, 104:{dt:"2026-07-19"}
 };
@@ -3278,30 +3280,55 @@ function renderCalendar(){
 // ELIMINATORIAS — Sistema completo de fase eliminatoria
 // ═══════════════════════════════════════════════════════
 var KO_BRACKET=[
-  // R32 — 16 cruces
-  {id:73,rnd:'R32',sh:'1A',sa:'2B'},{id:74,rnd:'R32',sh:'1C',sa:'2D'},
-  {id:75,rnd:'R32',sh:'1E',sa:'2F'},{id:76,rnd:'R32',sh:'1G',sa:'2H'},
-  {id:77,rnd:'R32',sh:'1I',sa:'2J'},{id:78,rnd:'R32',sh:'1K',sa:'2L'},
-  {id:79,rnd:'R32',sh:'1B',sa:'2A'},{id:80,rnd:'R32',sh:'1D',sa:'2C'},
-  {id:81,rnd:'R32',sh:'1F',sa:'2E'},{id:82,rnd:'R32',sh:'1H',sa:'2G'},
-  {id:83,rnd:'R32',sh:'1J',sa:'2I'},{id:84,rnd:'R32',sh:'1L',sa:'2K'},
-  {id:85,rnd:'R32',sh:'3B1',sa:'3B2'},{id:86,rnd:'R32',sh:'3B3',sa:'3B4'},
-  {id:87,rnd:'R32',sh:'3B5',sa:'3B6'},{id:88,rnd:'R32',sh:'3B7',sa:'3B8'},
-  // R16 — Octavos
-  {id:89,rnd:'R16',sh:'W73',sa:'W85'},{id:90,rnd:'R16',sh:'W74',sa:'W86'},
-  {id:91,rnd:'R16',sh:'W75',sa:'W87'},{id:92,rnd:'R16',sh:'W76',sa:'W88'},
-  {id:93,rnd:'R16',sh:'W77',sa:'W79'},{id:94,rnd:'R16',sh:'W78',sa:'W80'},
-  {id:95,rnd:'R16',sh:'W81',sa:'W83'},{id:96,rnd:'R16',sh:'W82',sa:'W84'},
-  // QF — Cuartos
-  {id:97,rnd:'QF',sh:'W89',sa:'W90'},{id:98,rnd:'QF',sh:'W91',sa:'W92'},
-  {id:99,rnd:'QF',sh:'W93',sa:'W94'},{id:100,rnd:'QF',sh:'W95',sa:'W96'},
-  // SF — Semis
-  {id:101,rnd:'SF',sh:'W97',sa:'W98'},{id:102,rnd:'SF',sh:'W99',sa:'W100'},
+  // R32 — 16 cruces (Jun 28–Jul 3) — bracket oficial FIFA 2026
+  {id:73,rnd:'R32',sh:'2A',sa:'2B'},  // Sudáfrica vs Canadá — Jun 28
+  {id:74,rnd:'R32',sh:'1C',sa:'2F'},  // Brasil vs Japón — Jun 29
+  {id:75,rnd:'R32',sh:'1E',sa:'3D'},  // Alemania vs Paraguay — Jun 29
+  {id:76,rnd:'R32',sh:'1F',sa:'2C'},  // Países Bajos vs Marruecos — Jun 29
+  {id:77,rnd:'R32',sh:'1I',sa:'3F'},  // Francia vs Suecia — Jun 30
+  {id:78,rnd:'R32',sh:'2E',sa:'2I'},  // Costa de Marfil vs Noruega — Jun 30
+  {id:79,rnd:'R32',sh:'1A',sa:'3E'},  // México vs Ecuador — Jun 30
+  {id:80,rnd:'R32',sh:'1L',sa:'3K'},  // Inglaterra vs Congo RD — Jul 1
+  {id:81,rnd:'R32',sh:'1D',sa:'3B'},  // EE.UU. vs Bosnia-Herz. — Jul 1
+  {id:82,rnd:'R32',sh:'1G',sa:'3I'},  // Bélgica vs Senegal — Jul 1
+  {id:83,rnd:'R32',sh:'2K',sa:'2L'},  // Portugal vs Croacia — Jul 2
+  {id:84,rnd:'R32',sh:'1H',sa:'2J'},  // España vs Austria — Jul 2
+  {id:85,rnd:'R32',sh:'1B',sa:'3J'},  // Suiza vs Argelia — Jul 2
+  {id:86,rnd:'R32',sh:'1J',sa:'2H'},  // Argentina vs Cabo Verde — Jul 3
+  {id:87,rnd:'R32',sh:'1K',sa:'3L'},  // Colombia vs Ghana — Jul 3
+  {id:88,rnd:'R32',sh:'2D',sa:'2G'},  // Australia vs Egipto — Jul 3
+  // R16 — Octavos (Jul 4–7)
+  {id:89,rnd:'R16',sh:'W74',sa:'W77'},
+  {id:90,rnd:'R16',sh:'W73',sa:'W75'},
+  {id:91,rnd:'R16',sh:'W76',sa:'W78'},
+  {id:92,rnd:'R16',sh:'W79',sa:'W80'},
+  {id:93,rnd:'R16',sh:'W83',sa:'W84'},
+  {id:94,rnd:'R16',sh:'W81',sa:'W82'},
+  {id:95,rnd:'R16',sh:'W86',sa:'W88'},
+  {id:96,rnd:'R16',sh:'W85',sa:'W87'},
+  // QF — Cuartos (Jul 9–11)
+  {id:97,rnd:'QF',sh:'W89',sa:'W90'},
+  {id:98,rnd:'QF',sh:'W93',sa:'W94'},
+  {id:99,rnd:'QF',sh:'W91',sa:'W92'},
+  {id:100,rnd:'QF',sh:'W95',sa:'W96'},
+  // SF — Semis (Jul 14–15)
+  {id:101,rnd:'SF',sh:'W97',sa:'W98'},
+  {id:102,rnd:'SF',sh:'W99',sa:'W100'},
   // 3er lugar y Final
   {id:103,rnd:'3rd',sh:'L101',sa:'L102'},
   {id:104,rnd:'Final',sh:'W101',sa:'W102'}
 ];
 let RES_KO=KO_BRACKET.map(function(m){return{id:m.id,rnd:m.rnd,h:'',a:'',hg:null,ag:null,p:false,et:false,pens:''};});
+// Pre-poblar nombres de equipo y resultados conocidos de R32
+(function(){
+  KO_BRACKET.forEach(function(slot){
+    var m=RES_KO.find(function(k){return k.id===slot.id;});
+    if(m&&!m.p){var nh=resolveKOTeam(slot.sh),na=resolveKOTeam(slot.sa);if(nh)m.h=nh;if(na)m.a=na;}
+  });
+  [{id:73,hg:0,ag:1,p:true},{id:74,hg:2,ag:1,p:true}].forEach(function(r){
+    var m=RES_KO.find(function(k){return k.id===r.id;});if(m)Object.assign(m,r);
+  });
+})();
 var koCurrentTab='R32';
 var koEditId=null;
 
@@ -3309,6 +3336,7 @@ function resolveKOTeam(slot){
   if(!slot) return '';
   if(/^1[A-L]$/.test(slot)){var g=slot[1];return tbl(g,RES)[0]?.t||'';}
   if(/^2[A-L]$/.test(slot)){var g=slot[1];return tbl(g,RES)[1]?.t||'';}
+  if(/^3[A-L]$/.test(slot)){var g=slot[1];return tbl(g,RES)[2]?.t||'';}
   if(slot.startsWith('3B')){
     var thirds=Object.keys(GR).map(function(g){return tbl(g,RES)[2];}).filter(Boolean);
     thirds.sort(function(a,b){return(b.pts-a.pts)||(b.gd-a.gd)||(b.gf-a.gf);});
