@@ -1081,6 +1081,7 @@ select option{background:var(--bg-800)}
         <button class="cal-filter-btn" onclick="calFilter(this,'r1')">Jornada 1</button>
         <button class="cal-filter-btn" onclick="calFilter(this,'r2')">Jornada 2</button>
         <button class="cal-filter-btn" onclick="calFilter(this,'r3')">Jornada 3</button>
+        <button class="cal-filter-btn" onclick="calFilter(this,'ko')">⚔️ Eliminatorias</button>
         <button class="cal-filter-btn" onclick="calFilter(this,'played')">✅ Jugados</button>
         <button class="cal-filter-btn" onclick="calFilter(this,'upcoming')">⏳ Próximos</button>
         <div style="width:1px;height:20px;background:var(--bg-600);margin:0 2px"></div>
@@ -1821,6 +1822,10 @@ function navTo(panel){
     var _hasTodayMatches=RES.some(function(m){
       var dt=(SCHED[m.id]||{}).dt;
       if(MATCH_TIMES[m.id]){var kd=new Date(MATCH_TIMES[m.id]);dt=kd.getFullYear()+'-'+String(kd.getMonth()+1).padStart(2,'0')+'-'+String(kd.getDate()).padStart(2,'0');}
+      return dt===_td;
+    })||KO_BRACKET.some(function(kb){
+      var dt=(SCHED[kb.id]||{}).dt;
+      if(MATCH_TIMES[kb.id]){var kd=new Date(MATCH_TIMES[kb.id]);dt=kd.getFullYear()+'-'+String(kd.getMonth()+1).padStart(2,'0')+'-'+String(kd.getDate()).padStart(2,'0');}
       return dt===_td;
     });
     if(_hasTodayMatches){
@@ -3142,28 +3147,43 @@ function calFilter(btn, filter){
 function renderCalendar(){
   var _now=new Date();
   var today=_now.getFullYear()+'-'+String(_now.getMonth()+1).padStart(2,'0')+'-'+String(_now.getDate()).padStart(2,'0');
+
+  // ── Fase de grupos ──
   var matches=RES.map(function(m){
     var s=SCHED[m.id]||{dt:'2026-07-01',v:'MLS'};
     var vd=VENUES[s.v]||{n:s.v,city:'',flag:'',cc:'us'};
     var dt=s.dt;
-    if(MATCH_TIMES[m.id]){
-      var kd=new Date(MATCH_TIMES[m.id]);
-      dt=kd.getFullYear()+'-'+String(kd.getMonth()+1).padStart(2,'0')+'-'+String(kd.getDate()).padStart(2,'0');
-    }
-    return {id:m.id,g:m.g,h:m.h,a:m.a,hg:m.hg,ag:m.ag,p:m.p,r:m.r,dt:dt,vk:s.v,vd:vd};
+    if(MATCH_TIMES[m.id]){var kd=new Date(MATCH_TIMES[m.id]);dt=kd.getFullYear()+'-'+String(kd.getMonth()+1).padStart(2,'0')+'-'+String(kd.getDate()).padStart(2,'0');}
+    return {id:m.id,g:m.g,h:m.h,a:m.a,hg:m.hg,ag:m.ag,p:m.p,r:m.r,dt:dt,vk:s.v,vd:vd,isKO:false,pens:'',hRes:true,aRes:true};
   });
 
+  // ── Fase eliminatoria ──
+  var KO_LBL={R32:'32avos',R16:'Octavos',QF:'Cuartos',SF:'Semis','3rd':'3er Lugar',Final:'Final'};
+  var koMatches=KO_BRACKET.map(function(kb){
+    var rko=RES_KO.find(function(r){return r.id===kb.id;})||{hg:null,ag:null,p:false,pens:''};
+    var s=SCHED[kb.id]||{dt:'2026-07-26'};
+    var vd=VENUES[s.v]||{n:s.v||'',city:'',flag:'',cc:'us'};
+    var dt=s.dt||'2026-07-26';
+    if(MATCH_TIMES[kb.id]){var kd=new Date(MATCH_TIMES[kb.id]);dt=kd.getFullYear()+'-'+String(kd.getMonth()+1).padStart(2,'0')+'-'+String(kd.getDate()).padStart(2,'0');}
+    var h=resolveKOTeam(kb.sh);
+    var a=resolveKOTeam(kb.sa);
+    return {id:kb.id,g:KO_LBL[kb.rnd]||kb.rnd,h:h||kb.sh,a:a||kb.sa,hg:rko.hg,ag:rko.ag,p:rko.p,pens:rko.pens,r:0,dt:dt,vk:s.v||'',vd:vd,isKO:true,rnd:kb.rnd,hRes:!!h,aRes:!!a};
+  });
+
+  var allMatches=matches.concat(koMatches);
+
   var f=calCurrentFilter;
-  var filtered=matches.filter(function(m){
-    if(f==='today') return m.dt===today;
-    if(f==='r1') return m.r===1;
-    if(f==='r2') return m.r===2;
-    if(f==='r3') return m.r===3;
-    if(f==='played') return m.p;
+  var filtered=allMatches.filter(function(m){
+    if(f==='today')    return m.dt===today;
+    if(f==='ko')       return m.isKO;
+    if(f==='r1')       return !m.isKO && m.r===1;
+    if(f==='r2')       return !m.isKO && m.r===2;
+    if(f==='r3')       return !m.isKO && m.r===3;
+    if(f==='played')   return m.p;
     if(f==='upcoming') return !m.p;
-    if(f==='mx') return m.vd.cc==='mx';
-    if(f==='ca') return m.vd.cc==='ca';
-    if(f==='us') return m.vd.cc==='us';
+    if(f==='mx')       return m.vd.cc==='mx';
+    if(f==='ca')       return m.vd.cc==='ca';
+    if(f==='us')       return m.vd.cc==='us';
     return true;
   });
 
@@ -3198,7 +3218,7 @@ function renderCalendar(){
     var playedCnt=dm.filter(function(m){return m.p;}).length;
 
     html+='<div class="cal-day-hdr"'+(isToday?' id="cal-today"':'')+'>'
-      +'<span class="cal-day-label'+(isToday?' cal-day-today'  :'')+'">'+dayName+' '+dayNum+' '+mon+(isToday?' · HOY':'')+'</span>'
+      +'<span class="cal-day-label'+(isToday?' cal-day-today':'')+'">'+dayName+' '+dayNum+' '+mon+(isToday?' · HOY':'')+'</span>'
       +'<span class="cal-day-badge">'+playedCnt+'/'+dm.length+' jugados</span>'
     +'</div>';
 
@@ -3209,29 +3229,31 @@ function renderCalendar(){
       var isMatchToday=!m.p && m.dt===today;
       var cls='cal-match'+(m.p?' played':(isMatchToday?' today':''));
       var localTime='';
-      if(MATCH_TIMES[m.id]){
-        var kd=new Date(MATCH_TIMES[m.id]);
-        localTime=kd.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-      }
+      if(MATCH_TIMES[m.id]){var kd=new Date(MATCH_TIMES[m.id]);localTime=kd.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
 
+      var teamsKnown=m.hRes&&m.aRes;
       var mid='';
       if(m.p){
-        mid='<span class="sc-badge">'+m.hg+' – '+m.ag+'</span>';
+        mid='<span class="sc-badge">'+m.hg+' – '+m.ag+(m.pens?' <span style="font-size:9px;color:var(--text-400)">(pen.)</span>':'')+'</span>';
+      } else if(!teamsKnown){
+        mid='<div style="text-align:center;padding:4px 0;font-size:10px;color:var(--text-500)">Por definir</div>';
       } else {
         var pr=sim(m.h,m.a);
         mid='<div style="flex-shrink:0;width:100%;margin:4px 0">'
           +pbarHTML(pr.pW*100,pr.pD*100,pr.pL*100,true)
           +'<div style="display:flex;justify-content:space-between;margin-top:3px;font-size:10px">'
             +'<span style="color:var(--green-400)">'+m.h.split(' ')[0]+' '+(pr.pW*100).toFixed(1)+'%</span>'
-            +'<span style="color:var(--text-400)">'+( (pr.pD*100).toFixed(1))+'% emp.</span>'
+            +'<span style="color:var(--text-400)">'+((pr.pD*100).toFixed(1))+'% emp.</span>'
             +'<span style="color:var(--red-400)">'+(pr.pL*100).toFixed(1)+'% '+m.a.split(' ')[0]+'</span>'
           +'</div>'
         +'</div>';
       }
 
+      var grpBadge='<span class="cal-grp"'+(m.isKO?' style="background:rgba(245,158,11,.2);color:var(--gold)"':'')+'>'+m.g+'</span>';
+
       html+='<div class="'+cls+'">'
         +'<div style="display:flex;align-items:center;gap:10px;width:100%">'
-          +'<span class="cal-grp">'+m.g+'</span>'
+          +grpBadge
           +(m.p
             ? '<div class="cal-teams" style="flex:1">'
                 +'<div class="cal-team" style="flex:1;justify-content:flex-end;text-align:right">'+m.h+'&nbsp;<span style="font-size:16px">'+flH+'</span></div>'
@@ -3241,7 +3263,7 @@ function renderCalendar(){
             : '<div style="flex:1">'
                 +'<div class="cal-teams">'
                   +'<div class="cal-team" style="flex:1;justify-content:flex-end;text-align:right">'+m.h+'&nbsp;<span style="font-size:16px">'+flH+'</span></div>'
-                  +'<div class="cal-vs">VS</div>'
+                  +'<div class="cal-vs">'+(teamsKnown?'VS':'·')+'</div>'
                   +'<div class="cal-team" style="flex:1"><span style="font-size:16px">'+flA+'</span>&nbsp;'+m.a+'</div>'
                 +'</div>'
                 +mid
@@ -3252,8 +3274,10 @@ function renderCalendar(){
           +(localTime?'<span class="cal-venue" style="color:var(--blue-400);font-weight:700;font-size:11px">🕐 '+localTime+'</span>':'')
           +'<span class="cal-venue">'+vc.flag+' '+vc.city+'</span>'
           +'<span class="cal-venue" style="color:#334155;font-size:9px">'+vc.n+'</span>'
-          +(m.p?'':'<button class="btn-pred-cal" onclick="goToPredictor(\''+m.h.replace(/'/g,"\\'")+"','"+m.a.replace(/'/g,"\\'")+'\')">🔮 Predecir</button>'
-           +'<button class="btn-pred-cal" style="background:rgba(99,102,241,.2);color:#818cf8" onclick="goToH2H(\''+m.h.replace(/'/g,"\\'")+"','"+m.a.replace(/'/g,"\\'")+'\')">⚔️ H2H</button>')
+          +(m.p?'':(teamsKnown
+            ?'<button class="btn-pred-cal" onclick="goToPredictor(\''+m.h.replace(/'/g,"\\'")+"','"+m.a.replace(/'/g,"\\'")+'\')">🔮 Predecir</button>'
+             +'<button class="btn-pred-cal" style="background:rgba(99,102,241,.2);color:#818cf8" onclick="goToH2H(\''+m.h.replace(/'/g,"\\'")+"','"+m.a.replace(/'/g,"\\'")+'\')">⚔️ H2H</button>'
+            :'<button class="btn-pred-cal" style="background:rgba(245,158,11,.1);color:var(--gold)" onclick="navTo(\'elim\')">🏆 Ver bracket</button>'))
         +'</div>'
       +'</div>';
     });
@@ -3262,7 +3286,6 @@ function renderCalendar(){
   var totalPlayed=filtered.filter(function(m){return m.p;}).length;
   html+='<div style="text-align:center;margin-top:16px;font-size:11px;color:#334155">'+filtered.length+' partidos · '+totalPlayed+' jugados · '+(filtered.length-totalPlayed)+' pendientes</div>';
   document.getElementById('cal-content').innerHTML=html;
-  // Scroll al día actual dejando margen superior para leer el encabezado
   var todayEl=document.getElementById('cal-today');
   if(todayEl) setTimeout(function(){
     var main=document.getElementById('main');
