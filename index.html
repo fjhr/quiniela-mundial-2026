@@ -1075,7 +1075,9 @@ select option{background:var(--bg-800)}
   <div class="panel" id="panel-cal">
     <div class="card" style="margin-bottom:14px">
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <button class="cal-filter-btn active" onclick="calFilter(this,'all')">📋 Todos</button>
+        <button class="cal-filter-btn" id="cal-btn-today" onclick="calFilter(this,'today')" style="background:rgba(37,99,235,.15);border-color:rgba(37,99,235,.35);color:var(--blue-400)">📅 HOY</button>
+        <div style="width:1px;height:20px;background:var(--bg-600);margin:0 2px"></div>
+        <button class="cal-filter-btn active" id="cal-btn-all" onclick="calFilter(this,'all')">📋 Todos</button>
         <button class="cal-filter-btn" onclick="calFilter(this,'r1')">Jornada 1</button>
         <button class="cal-filter-btn" onclick="calFilter(this,'r2')">Jornada 2</button>
         <button class="cal-filter-btn" onclick="calFilter(this,'r3')">Jornada 3</button>
@@ -1813,7 +1815,22 @@ function navTo(panel){
   if(panel==='klement')renderKlement();
   if(panel==='montecarlo')renderMonteCarlo();
   if(panel==='h2h')renderH2H();
-  if(panel==='cal')renderCalendar();
+  if(panel==='cal'){
+    var _nd=new Date();
+    var _td=_nd.getFullYear()+'-'+String(_nd.getMonth()+1).padStart(2,'0')+'-'+String(_nd.getDate()).padStart(2,'0');
+    var _hasTodayMatches=RES.some(function(m){
+      var dt=(SCHED[m.id]||{}).dt;
+      if(MATCH_TIMES[m.id]){var kd=new Date(MATCH_TIMES[m.id]);dt=kd.getFullYear()+'-'+String(kd.getMonth()+1).padStart(2,'0')+'-'+String(kd.getDate()).padStart(2,'0');}
+      return dt===_td;
+    });
+    if(_hasTodayMatches){
+      calCurrentFilter='today';
+      document.querySelectorAll('.cal-filter-btn').forEach(function(b){b.classList.remove('active');});
+      var _tb=document.getElementById('cal-btn-today');
+      if(_tb) _tb.classList.add('active');
+    }
+    renderCalendar();
+  }
   if(panel==='escenarios')renderEscenarios();
   if(panel==='goleadores')renderGoleadores();
   if(panel==='quiniela')renderQuiniela();
@@ -3138,6 +3155,7 @@ function renderCalendar(){
 
   var f=calCurrentFilter;
   var filtered=matches.filter(function(m){
+    if(f==='today') return m.dt===today;
     if(f==='r1') return m.r===1;
     if(f==='r2') return m.r===2;
     if(f==='r3') return m.r===3;
@@ -3161,7 +3179,8 @@ function renderCalendar(){
   });
 
   if(!days.length){
-    document.getElementById('cal-content').innerHTML='<div class="card" style="text-align:center;padding:30px;color:#94a3b8">No hay partidos para este filtro</div>';
+    var _emptyMsg=f==='today'?'No hay partidos programados para hoy':'No hay partidos para este filtro';
+    document.getElementById('cal-content').innerHTML='<div class="card" style="text-align:center;padding:30px;color:#94a3b8">'+_emptyMsg+'</div>';
     return;
   }
 
