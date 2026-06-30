@@ -16,6 +16,7 @@ export const useMatchStore = create((set, get) => ({
   matchTimes: (() => {
     try { return JSON.parse(localStorage.getItem('match-times') || '{}'); } catch { return {}; }
   })(),
+  lastSync: null,
 
   applyESPNResults(events, nameMap = {}) {
     const { res } = get();
@@ -72,6 +73,20 @@ export const useMatchStore = create((set, get) => ({
   setMatchTimes(times) {
     set({ matchTimes: times });
     try { localStorage.setItem('match-times', JSON.stringify(times)); } catch {}
+  },
+
+  setLastSync(date) {
+    set({ lastSync: date });
+  },
+
+  restore() {
+    set({
+      res: initData.map(r => ({ ...r })),
+      resKO: buildInitialResKO(koBracketData),
+      matchTimes: {},
+      lastSync: null,
+    });
+    try { localStorage.removeItem('match-times'); } catch {}
   },
 
   updateKOResult(id, hg, ag, pens = '') {
