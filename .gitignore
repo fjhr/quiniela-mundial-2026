@@ -31,3 +31,8 @@ mundial2026-predictor.skill/
 # Python
 __pycache__/
 *.pyc
+
+# Node / Vite
+node_modules/
+dist/
+.wrangler/

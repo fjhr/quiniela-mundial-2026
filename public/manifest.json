@@ -1,0 +1,22 @@
+{
+  "name": "Mundial 2026 — Quiniela",
+  "short_name": "Quiniela 2026",
+  "description": "Pronósticos y posiciones para la quiniela del Mundial 2026",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["sports", "entertainment"]
+}

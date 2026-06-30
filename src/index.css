@@ -1,0 +1,27 @@
+:root {
+  --bg-950: #020617; --bg-900: #0f172a; --bg-800: #1e293b; --bg-700: #334155; --bg-600: #475569;
+  --text-50: #f8fafc; --text-200: #e2e8f0; --text-400: #94a3b8; --text-500: #64748b; --text-600: #475569;
+  --blue: #2563eb; --blue-400: #60a5fa; --blue-700: #1d4ed8;
+  --gold: #f59e0b; --gold-300: #fcd34d;
+  --green: #16a34a; --green-400: #4ade80;
+  --red: #dc2626; --red-400: #f87171;
+  --gray: #6b7280;
+  --sidebar-w: 224px; --sidebar-cw: 58px;
+  --r-sm: 6px; --r-md: 8px; --r-lg: 12px; --r-xl: 16px;
+  --hdr-h: 54px;
+  --pg-hdr-bg: rgba(15, 23, 42, .95);
+}
+[data-theme="light"] {
+  --bg-950: #ffffff; --bg-900: #f8fafc; --bg-800: #f1f5f9; --bg-700: #e2e8f0; --bg-600: #cbd5e1;
+  --text-50: #0f172a; --text-200: #1e293b; --text-400: #475569; --text-500: #64748b; --text-600: #94a3b8;
+  --blue-400: #2563eb; --gold: #d97706; --gold-300: #f59e0b;
+  --green-400: #16a34a; --red-400: #dc2626;
+  --pg-hdr-bg: rgba(248, 250, 252, .95);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg-950);
+  color: var(--text-50);
+  min-height: 100vh;
+}

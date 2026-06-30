@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0f172a"/>
+  <!-- Pelota de fútbol estilizada -->
+  <circle cx="256" cy="210" r="110" fill="none" stroke="#60a5fa" stroke-width="12"/>
+  <polygon points="256,115 296,145 280,190 232,190 216,145" fill="#60a5fa" opacity="0.9"/>
+  <line x1="296" y1="145" x2="346" y2="155" stroke="#60a5fa" stroke-width="10" stroke-linecap="round"/>
+  <line x1="346" y1="155" x2="358" y2="210" stroke="#60a5fa" stroke-width="10" stroke-linecap="round"/>
+  <line x1="280" y1="190" x2="296" y2="242" stroke="#60a5fa" stroke-width="10" stroke-linecap="round"/>
+  <line x1="232" y1="190" x2="216" y2="242" stroke="#60a5fa" stroke-width="10" stroke-linecap="round"/>
+  <line x1="216" y1="145" x2="166" y2="155" stroke="#60a5fa" stroke-width="10" stroke-linecap="round"/>
+  <line x1="166" y1="155" x2="154" y2="210" stroke="#60a5fa" stroke-width="10" stroke-linecap="round"/>
+  <!-- Texto -->
+  <text x="256" y="368" font-family="Inter,Arial,sans-serif" font-size="72" font-weight="800" fill="#f59e0b" text-anchor="middle" letter-spacing="2">2026</text>
+  <text x="256" y="430" font-family="Inter,Arial,sans-serif" font-size="36" font-weight="600" fill="#60a5fa" text-anchor="middle" letter-spacing="6">QUINIELA</text>
+</svg>
