@@ -7,6 +7,7 @@ import teams from '../data/teams.json';
 import sched from '../data/sched.json';
 import koBracket from '../data/ko-bracket.json';
 import { resolveKOTeam } from '../services/resolvers.js';
+import gr from '../data/gr.json';
 
 const KO_LBL = { R32:'32avos', R16:'Octavos', QF:'Cuartos', SF:'Semis', '3rd':'3er Lugar', Final:'Final' };
 const DAY_ES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
@@ -47,8 +48,8 @@ export default function CalendarPanel() {
 
   const koMatches = koBracket.map(kb => {
     const rko = resKO.find(r => r.id === kb.id) || { hg: null, ag: null, p: false, pens: '' };
-    const h = resolveKOTeam(kb.sh, res, resKO, koBracket);
-    const a = resolveKOTeam(kb.sa, res, resKO, koBracket);
+    const h = resolveKOTeam(kb.sh, res, resKO, koBracket, gr);
+    const a = resolveKOTeam(kb.sa, res, resKO, koBracket, gr);
     return {
       id: kb.id, g: KO_LBL[kb.rnd] || kb.rnd,
       h: h || kb.sh, a: a || kb.sa,
