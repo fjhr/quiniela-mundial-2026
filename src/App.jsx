@@ -97,7 +97,8 @@ export default function App() {
   }, []);
 
   const { title, subtitle } = PANEL_INFO[activePanel] || {};
-  const ml = sidebarCollapsed ? 'var(--sidebar-cw)' : 'var(--sidebar-w)';
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const ml = isMobile ? '0' : (sidebarCollapsed ? 'var(--sidebar-cw)' : 'var(--sidebar-w)');
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
