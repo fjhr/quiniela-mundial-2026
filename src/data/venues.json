@@ -1,0 +1,98 @@
+{
+  "AZT": {
+    "n": "Estadio Azteca",
+    "city": "Ciudad de México",
+    "flag": "🇲🇽",
+    "cc": "mx"
+  },
+  "AKR": {
+    "n": "Estadio Akron",
+    "city": "Guadalajara",
+    "flag": "🇲🇽",
+    "cc": "mx"
+  },
+  "BBV": {
+    "n": "Estadio BBVA",
+    "city": "Monterrey",
+    "flag": "🇲🇽",
+    "cc": "mx"
+  },
+  "BCP": {
+    "n": "BC Place",
+    "city": "Vancouver",
+    "flag": "🇨🇦",
+    "cc": "ca"
+  },
+  "BMO": {
+    "n": "BMO Field",
+    "city": "Toronto",
+    "flag": "🇨🇦",
+    "cc": "ca"
+  },
+  "MLS": {
+    "n": "MetLife Stadium",
+    "city": "New York",
+    "flag": "🇺🇸",
+    "cc": "us"
+  },
+  "RSB": {
+    "n": "Rose Bowl",
+    "city": "Pasadena",
+    "flag": "🇺🇸",
+    "cc": "us"
+  },
+  "SOF": {
+    "n": "SoFi Stadium",
+    "city": "Los Ángeles",
+    "flag": "🇺🇸",
+    "cc": "us"
+  },
+  "ATT": {
+    "n": "AT&T Stadium",
+    "city": "Dallas",
+    "flag": "🇺🇸",
+    "cc": "us"
+  },
+  "NRG": {
+    "n": "NRG Stadium",
+    "city": "Houston",
+    "flag": "🇺🇸",
+    "cc": "us"
+  },
+  "HRS": {
+    "n": "Hard Rock Stadium",
+    "city": "Miami",
+    "flag": "🇺🇸",
+    "cc": "us"
+  },
+  "LUM": {
+    "n": "Lumen Field",
+    "city": "Seattle",
+    "flag": "🇺🇸",
+    "cc": "us"
+  },
+  "ARR": {
+    "n": "Arrowhead Stadium",
+    "city": "Kansas City",
+    "flag": "🇺🇸",
+    "cc": "us"
+  },
+  "GIL": {
+    "n": "Gillette Stadium",
+    "city": "Boston",
+    "flag": "🇺🇸",
+    "cc": "us"
+  },
+  "EMP": {
+    "n": "Empower Field",
+    "city": "Denver",
+    "flag": "🇺🇸",
+    "cc": "us"
+  },
+  "LEV": {
+    "n": "Levi's Stadium",
+    "city": "San José",
+    "flag": "🇺🇸",
+    "cc": "us"
+  }
+}
