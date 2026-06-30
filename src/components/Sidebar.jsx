@@ -84,7 +84,7 @@ export default function Sidebar() {
   };
 
   return (
-    <nav style={{
+    <nav className={`sidebar${collapsed ? '' : ' open'}`} style={{
       width: collapsed ? 'var(--sidebar-cw)' : 'var(--sidebar-w)',
       background: 'var(--bg-950)', borderRight: '1px solid var(--bg-700)',
       height: '100vh', position: 'fixed', top: 0, left: 0,
