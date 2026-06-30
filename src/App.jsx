@@ -1,85 +1,130 @@
 // src/App.jsx
-import React, { useEffect, Suspense } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useMatchStore } from './store/matchStore.js';
 import { useUiStore } from './store/uiStore.js';
 import { fetchFromESPN, applyESPNTimes, syncKnockout, NAME_MAP } from './services/espn.js';
 import { resolveKOTeam } from './services/resolvers.js';
 import Sidebar from './components/Sidebar.jsx';
+import PageHeader from './components/PageHeader.jsx';
 import Toast from './components/Toast.jsx';
 import Spinner from './components/Spinner.jsx';
 import CalendarPanel from './panels/CalendarPanel.jsx';
 import sched from './data/sched.json';
 import koBracket from './data/ko-bracket.json';
 
-// Paneles lazy
-const GroupsPanel = React.lazy(() => import('./panels/GroupsPanel.jsx'));
+const GroupsPanel    = React.lazy(() => import('./panels/GroupsPanel.jsx'));
 const EliminatoriaPanel = React.lazy(() => import('./panels/EliminatoriaPanel.jsx'));
-const BracketPanel = React.lazy(() => import('./panels/BracketPanel.jsx'));
+const BracketPanel   = React.lazy(() => import('./panels/BracketPanel.jsx'));
 const PredictorPanel = React.lazy(() => import('./panels/PredictorPanel.jsx'));
-const H2HPanel = React.lazy(() => import('./panels/H2HPanel.jsx'));
-const KlementPanel = React.lazy(() => import('./panels/KlementPanel.jsx'));
+const H2HPanel       = React.lazy(() => import('./panels/H2HPanel.jsx'));
+const KlementPanel   = React.lazy(() => import('./panels/KlementPanel.jsx'));
 const EscenariosPanel = React.lazy(() => import('./panels/EscenariosPanel.jsx'));
-const QuinielaPanel = React.lazy(() => import('./panels/QuinielaPanel.jsx'));
+const QuinielaPanel  = React.lazy(() => import('./panels/QuinielaPanel.jsx'));
+const StatsPanel     = React.lazy(() => import('./panels/StatsPanel.jsx'));
 
-const PANELS = ['cal','groups','elim','bracket','predictor','h2h','klement','escenarios','quiniela'];
+const PANEL_INFO = {
+  cal:       { title: '📅 Calendario',       subtitle: 'Partidos ordenados por fecha · filtra por fase o país sede' },
+  groups:    { title: '👥 Fase de Grupos',   subtitle: 'Tabla de posiciones y resultados por grupo' },
+  elim:      { title: '⚔️ Eliminatorias',    subtitle: 'Resultados de la fase eliminatoria' },
+  bracket:   { title: '🏆 Bracket R32',      subtitle: 'Cuadro completo desde 32avos' },
+  predictor: { title: '🎯 Predictor',        subtitle: 'Probabilidades Poisson por partido' },
+  h2h:       { title: '↔️ Head-to-Head',     subtitle: 'Comparación directa entre dos equipos' },
+  klement:   { title: '⭐ Klement',          subtitle: 'Ranking de forma actual' },
+  stats:     { title: '📊 Estadísticas',     subtitle: 'Resumen del torneo en números' },
+  quiniela:  { title: '📋 Quiniela',         subtitle: 'Tus predicciones y el pool de GolPredictor' },
+  escenarios:{ title: '🎲 Escenarios',       subtitle: 'Simulaciones Monte Carlo' },
+};
 
 const PANEL_MAP = {
-  cal: <CalendarPanel />,
-  groups: <GroupsPanel />,
-  elim: <EliminatoriaPanel />,
-  bracket: <BracketPanel />,
-  predictor: <PredictorPanel />,
-  h2h: <H2HPanel />,
-  klement: <KlementPanel />,
+  cal:        <CalendarPanel />,
+  groups:     <GroupsPanel />,
+  elim:       <EliminatoriaPanel />,
+  bracket:    <BracketPanel />,
+  predictor:  <PredictorPanel />,
+  h2h:        <H2HPanel />,
+  klement:    <KlementPanel />,
+  stats:      <StatsPanel />,
   escenarios: <EscenariosPanel />,
-  quiniela: <QuinielaPanel />,
+  quiniela:   <QuinielaPanel />,
 };
 
 export default function App() {
-  const { res, resKO, matchTimes, setMatchTimes, applyESPNResults, applyKOUpdates, setKOTeamNames } = useMatchStore();
-  const { activePanel, sidebarCollapsed, toastMessage, toastType, setPanel, toggleSidebar, showToast } = useUiStore();
+  const {
+    res, resKO, matchTimes,
+    setMatchTimes, applyESPNResults, applyKOUpdates,
+    setKOTeamNames, setLastSync, restore, lastSync,
+  } = useMatchStore();
+  const { activePanel, sidebarCollapsed, toastMessage, toastType, showToast } = useUiStore();
+  const [syncing, setSyncing] = useState(false);
 
-  // Pre-poblar nombres de equipo en resKO al montar
   useEffect(() => {
     setKOTeamNames(koBracket, slot => resolveKOTeam(slot, res, resKO, koBracket));
   }, []);
 
-  // ESPN sync diferido 1200ms
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const events = await fetchFromESPN();
+      const { matchTimes: newTimes } = applyESPNTimes(events, sched);
+      setMatchTimes({ ...matchTimes, ...newTimes });
+      const count = applyESPNResults(events, NAME_MAP);
+      const koUpdates = syncKnockout(events, resKO);
+      applyKOUpdates(koUpdates);
+      setLastSync(new Date().toISOString());
+      showToast(
+        count + koUpdates.length > 0
+          ? `${count + koUpdates.length} resultado(s) actualizado(s) · ESPN`
+          : 'Sin cambios · ESPN',
+        'ok'
+      );
+    } catch {
+      showToast('ESPN no disponible', 'warn');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleRestore = () => {
+    if (window.confirm('¿Restaurar todos los resultados a los datos base?')) {
+      restore();
+      showToast('Datos restaurados', 'ok');
+    }
+  };
+
   useEffect(() => {
-    const timer = setTimeout(async () => {
-      try {
-        const events = await fetchFromESPN();
-        const { matchTimes: newTimes } = applyESPNTimes(events, sched);
-        setMatchTimes({ ...matchTimes, ...newTimes });
-        const count = applyESPNResults(events, NAME_MAP);
-        const koUpdates = syncKnockout(events, resKO);
-        applyKOUpdates(koUpdates);
-        if (count + koUpdates.length > 0) {
-          showToast(`${count + koUpdates.length} resultado(s) actualizado(s) · ESPN`, 'ok');
-        }
-      } catch {
-        showToast('ESPN no disponible', 'warn');
-      }
-    }, 1200);
-    return () => clearTimeout(timer);
+    const t = setTimeout(handleSync, 1200);
+    return () => clearTimeout(t);
   }, []);
 
-  const marginLeft = sidebarCollapsed ? 'var(--sidebar-cw)' : 'var(--sidebar-w)';
+  const { title, subtitle } = PANEL_INFO[activePanel] || {};
+  const ml = sidebarCollapsed ? 'var(--sidebar-cw)' : 'var(--sidebar-w)';
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar
-        panels={PANELS}
-        active={activePanel}
-        onSelect={setPanel}
-        collapsed={sidebarCollapsed}
-        onToggle={toggleSidebar}
-      />
-      <main style={{ marginLeft, flex: 1, padding: '20px', maxWidth: 900, transition: 'margin-left 0.2s' }}>
-        <Suspense fallback={<Spinner />}>
-          {PANEL_MAP[activePanel]}
-        </Suspense>
-      </main>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+      <Sidebar />
+      <div style={{
+        marginLeft: ml, flex: 1,
+        display: 'flex', flexDirection: 'column',
+        overflow: 'hidden', transition: 'margin-left 0.2s',
+        minWidth: 0,
+      }}>
+        <PageHeader
+          title={title}
+          subtitle={subtitle}
+          onSync={handleSync}
+          syncing={syncing}
+          onRestore={handleRestore}
+          lastSync={lastSync}
+        />
+        <main style={{
+          flex: 1, overflowY: 'auto', overflowX: 'hidden',
+          padding: '20px', maxWidth: 960,
+        }}>
+          <Suspense fallback={<Spinner />}>
+            {PANEL_MAP[activePanel]}
+          </Suspense>
+        </main>
+      </div>
       <Toast message={toastMessage} type={toastType} />
     </div>
   );
