@@ -3,6 +3,7 @@ import { useMatchStore } from '../store/matchStore.js';
 import { useUiStore } from '../store/uiStore.js';
 import MatchCard from '../components/MatchCard.jsx';
 import FilterBar from '../components/FilterBar.jsx';
+import { sim } from '../services/poisson.js';
 import teams from '../data/teams.json';
 import sched from '../data/sched.json';
 import koBracket from '../data/ko-bracket.json';
@@ -23,7 +24,7 @@ const FILTERS = [
 
 export default function CalendarPanel() {
   const { res, resKO, matchTimes } = useMatchStore();
-  const { calFilter, setCalFilter } = useUiStore();
+  const { calFilter, setCalFilter, setPanel } = useUiStore();
 
   const now = new Date();
   const today = now.getFullYear() + '-' +
@@ -77,6 +78,13 @@ export default function CalendarPanel() {
   });
   const days = Object.keys(byDay).sort();
 
+  const getProbs = (m) => {
+    if (m.p) return {};
+    if (!teams[m.h] || !teams[m.a]) return {};
+    const { pW, pD, pL } = sim(m.h, m.a, teams);
+    return { pW, pD, pL };
+  };
+
   return (
     <div>
       <h2 style={{ marginBottom: 16, color: 'var(--text-200)' }}>📅 Calendario</h2>
@@ -105,10 +113,24 @@ export default function CalendarPanel() {
                 {playedCnt}/{dm.length} jugados
               </span>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {dm.map(m => (
-                <MatchCard key={m.id} match={m} teams={teams} matchTimes={matchTimes} sched={sched} />
-              ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {dm.map(m => {
+                const probs = getProbs(m);
+                return (
+                  <MatchCard
+                    key={m.id}
+                    match={m}
+                    teams={teams}
+                    matchTimes={matchTimes}
+                    sched={sched}
+                    pW={probs.pW}
+                    pD={probs.pD}
+                    pL={probs.pL}
+                    onPredict={!m.p ? () => setPanel('predictor') : undefined}
+                    onH2H={!m.p ? () => setPanel('h2h') : undefined}
+                  />
+                );
+              })}
             </div>
           </div>
         );
