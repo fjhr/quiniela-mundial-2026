@@ -97,6 +97,13 @@ export default function App() {
     return () => clearTimeout(t);
   }, []);
 
+  // Sincronizar al abrir el calendario (máx. una vez cada 2 min)
+  useEffect(() => {
+    if (activePanel !== 'cal') return;
+    if (lastSync && Date.now() - new Date(lastSync).getTime() < 120_000) return;
+    handleSync();
+  }, [activePanel]);
+
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
 
   useEffect(() => {
