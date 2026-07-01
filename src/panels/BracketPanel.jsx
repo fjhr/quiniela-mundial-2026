@@ -57,7 +57,6 @@ export default function BracketPanel() {
 
   return (
     <div>
-      <h2 style={{ marginBottom: 16, color: 'var(--text-200)' }}>🎯 Bracket R32</h2>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
         <div>
           <h3 style={{ fontSize: 12, color: 'var(--text-400)', marginBottom: 10 }}>Llave 1</h3>

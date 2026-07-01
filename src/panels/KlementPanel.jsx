@@ -28,7 +28,6 @@ export default function KlementPanel() {
 
   return (
     <div>
-      <h2 style={{ marginBottom: 16, color: 'var(--text-200)' }}>⭐ Klement Score</h2>
       <div style={{ marginBottom: 24 }}>
         <Bar data={chartData} options={{
           indexAxis: 'y',

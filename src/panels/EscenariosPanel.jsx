@@ -48,7 +48,6 @@ export default function EscenariosPanel() {
 
   return (
     <div>
-      <h2 style={{ marginBottom: 16, color: 'var(--text-200)' }}>🎲 Escenarios Monte Carlo</h2>
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 20 }}>
         <button onClick={run} disabled={running} style={{
           background: 'var(--blue)', color: '#fff', border: 'none',

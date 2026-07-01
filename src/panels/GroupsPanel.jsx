@@ -18,7 +18,6 @@ export default function GroupsPanel() {
 
   return (
     <div>
-      <h2 style={{ marginBottom: 16, color: 'var(--text-200)' }}>🏆 Fase de Grupos</h2>
 
       {/* Selector de grupo */}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 20 }}>

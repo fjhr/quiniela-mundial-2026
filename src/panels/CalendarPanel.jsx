@@ -89,7 +89,6 @@ export default function CalendarPanel() {
 
   return (
     <div>
-      <h2 style={{ marginBottom: 16, color: 'var(--text-200)' }}>📅 Calendario</h2>
       <FilterBar filters={FILTERS} active={calFilter} onChange={setCalFilter} />
       {days.map(dt => {
         const d = new Date(dt + 'T12:00:00Z');

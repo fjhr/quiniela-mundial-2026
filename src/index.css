@@ -23,6 +23,10 @@ html, body {
   height: 100%;
   overflow: hidden;
 }
+/* dvh excluye la barra de URL del browser en mobile */
+@supports (height: 100dvh) {
+  html { height: 100dvh; }
+}
 body {
   font-family: 'Inter', system-ui, sans-serif;
   background: var(--bg-950);

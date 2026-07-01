@@ -337,7 +337,6 @@ export default function QuinielaPanel() {
 
   return (
     <div>
-      <h2 style={{ marginBottom: 16, color: 'var(--text-200)' }}>📋 Quiniela</h2>
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
         {tabBtn('mis', '👤 Mis predicciones')}
         {tabBtn('gp', '🌐 GolPredictor Pool')}

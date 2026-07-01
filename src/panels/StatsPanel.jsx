@@ -67,7 +67,6 @@ export default function StatsPanel() {
   if (partidos === 0) {
     return (
       <div>
-        <h2 style={{ marginBottom: 16, color: 'var(--text-200)' }}>📊 Estadísticas</h2>
         <p style={{ color: 'var(--text-400)', textAlign: 'center', marginTop: 40 }}>
           No hay partidos jugados aún.
         </p>
@@ -77,7 +76,6 @@ export default function StatsPanel() {
 
   return (
     <div>
-      <h2 style={{ marginBottom: 20, color: 'var(--text-200)' }}>📊 Estadísticas</h2>
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 24 }}>

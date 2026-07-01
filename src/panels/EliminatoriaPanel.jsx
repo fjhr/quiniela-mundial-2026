@@ -40,7 +40,6 @@ export default function EliminatoriaPanel() {
 
   return (
     <div>
-      <h2 style={{ marginBottom: 16, color: 'var(--text-200)' }}>⚔️ Fase Eliminatoria</h2>
       <FilterBar filters={RND_FILTERS} active={koTab} onChange={setKoTab} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {koMatches.map(m => (

@@ -61,7 +61,6 @@ export default function H2HPanel() {
 
   return (
     <div>
-      <h2 style={{ marginBottom: 16, color: 'var(--text-200)' }}>📊 Head to Head</h2>
       <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
         {select(h, setH)}
         <span style={{ color: 'var(--text-400)' }}>vs</span>

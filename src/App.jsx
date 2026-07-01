@@ -108,7 +108,7 @@ export default function App() {
   const ml = isMobile ? '0' : (sidebarCollapsed ? 'var(--sidebar-cw)' : 'var(--sidebar-w)');
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
       <Sidebar />
       {isMobile && !sidebarCollapsed && (
         <div className="sidebar-backdrop" onClick={toggleSidebar} />
