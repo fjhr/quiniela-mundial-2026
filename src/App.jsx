@@ -23,16 +23,16 @@ const QuinielaPanel  = React.lazy(() => import('./panels/QuinielaPanel.jsx'));
 const StatsPanel     = React.lazy(() => import('./panels/StatsPanel.jsx'));
 
 const PANEL_INFO = {
-  cal:       { title: 'Calendario',       subtitle: 'Partidos ordenados por fecha · filtra por fase o país sede' },
-  groups:    { title: 'Fase de Grupos',   subtitle: 'Tabla de posiciones y resultados por grupo' },
-  elim:      { title: 'Eliminatorias',    subtitle: 'Resultados de la fase eliminatoria' },
-  bracket:   { title: 'Bracket R32',      subtitle: 'Cuadro completo desde 32avos' },
-  predictor: { title: 'Predictor',        subtitle: 'Probabilidades Poisson por partido' },
-  h2h:       { title: 'Head-to-Head',     subtitle: 'Comparación directa entre dos equipos' },
-  klement:   { title: 'Klement',          subtitle: 'Ranking de forma actual' },
-  stats:     { title: 'Estadísticas',     subtitle: 'Resumen del torneo en números' },
-  quiniela:  { title: 'Quiniela',         subtitle: 'Tus predicciones y el pool de GolPredictor' },
-  escenarios:{ title: 'Escenarios',       subtitle: 'Simulaciones Monte Carlo' },
+  cal:       { icon: 'ti-calendar',         title: 'Calendario',       subtitle: 'Partidos ordenados por fecha · filtra por fase o país sede' },
+  groups:    { icon: 'ti-layout-grid',      title: 'Fase de Grupos',   subtitle: 'Tabla de posiciones y resultados por grupo' },
+  elim:      { icon: 'ti-sitemap',          title: 'Eliminatorias',    subtitle: 'Resultados de la fase eliminatoria' },
+  bracket:   { icon: 'ti-tournament',       title: 'Bracket R32',      subtitle: 'Cuadro completo desde 32avos' },
+  predictor: { icon: 'ti-chart-radar',      title: 'Predictor',        subtitle: 'Probabilidades Poisson por partido' },
+  h2h:       { icon: 'ti-switch-horizontal',title: 'Head-to-Head',     subtitle: 'Comparación directa entre dos equipos' },
+  klement:   { icon: 'ti-math-function',    title: 'Klement',          subtitle: 'Ranking de forma actual' },
+  stats:     { icon: 'ti-chart-bar',        title: 'Estadísticas',     subtitle: 'Resumen del torneo en números' },
+  quiniela:  { icon: 'ti-device-gamepad-2', title: 'Quiniela',         subtitle: 'Tus predicciones y el pool de GolPredictor' },
+  escenarios:{ icon: 'ti-calculator',       title: 'Escenarios',       subtitle: 'Simulaciones Monte Carlo' },
 };
 
 const PANEL_MAP = {
@@ -104,7 +104,7 @@ export default function App() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const { title, subtitle } = PANEL_INFO[activePanel] || {};
+  const { icon, title, subtitle } = PANEL_INFO[activePanel] || {};
   const ml = isMobile ? '0' : (sidebarCollapsed ? 'var(--sidebar-cw)' : 'var(--sidebar-w)');
 
   return (
@@ -117,6 +117,7 @@ export default function App() {
         minWidth: 0,
       }}>
         <PageHeader
+          icon={icon}
           title={title}
           subtitle={subtitle}
           onSync={handleSync}

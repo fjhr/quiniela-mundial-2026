@@ -27,14 +27,16 @@ export default function CalendarPanel() {
   const { calFilter, setCalFilter, setPanel } = useUiStore();
 
   const now = new Date();
+  // Usar hora local para "hoy" — el usuario ve los partidos del día en su zona horaria
   const today = now.getFullYear() + '-' +
     String(now.getMonth() + 1).padStart(2, '0') + '-' +
     String(now.getDate()).padStart(2, '0');
 
-  // Construir lista de todos los partidos con fecha
   const getMatchDate = (id) => {
     const mt = matchTimes[id] || matchTimes[String(id)];
     if (mt) {
+      // ESPN devuelve UTC; convertir a hora local para que los partidos
+      // nocturnos aparezcan en el día correcto para el usuario
       const kd = new Date(mt);
       return kd.getFullYear() + '-' + String(kd.getMonth()+1).padStart(2,'0') + '-' + String(kd.getDate()).padStart(2,'0');
     }

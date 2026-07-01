@@ -8,7 +8,7 @@ document.documentElement.setAttribute('data-theme', savedTheme);
 
 export const useUiStore = create((set) => ({
   activePanel: 'cal',
-  calFilter: 'all',
+  calFilter: 'today',
   selectedGroup: 'A',
   koTab: 'R32',
   sidebarCollapsed: window.innerWidth < 768,

@@ -8,7 +8,7 @@ function fmtLastSync(date) {
   return `Hace ${Math.round(mins / 60)}h`;
 }
 
-export default function PageHeader({ title, subtitle, onSync, syncing, onRestore, lastSync }) {
+export default function PageHeader({ icon, title, subtitle, onSync, syncing, onRestore, lastSync }) {
   const { toggleSidebar } = useUiStore();
 
   return (
@@ -30,7 +30,8 @@ export default function PageHeader({ title, subtitle, onSync, syncing, onRestore
         aria-label="Menú"
       ><i className="ti ti-menu-2" /></button>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-50)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-50)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 7 }}>
+          {icon && <i className={`ti ${icon}`} style={{ fontSize: 16, flexShrink: 0 }} />}
           {title}
         </div>
         {subtitle && (
