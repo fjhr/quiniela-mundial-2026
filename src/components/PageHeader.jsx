@@ -54,7 +54,7 @@ export default function PageHeader({ icon, title, subtitle, onSync, syncing, onR
           fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
         }}
       >
-        <><i className="ti ti-history" /> Restaurar</>
+        <><i className="ti ti-history" /><span className="hdr-btn-text"> Restaurar</span></>
       </button>
       <button
         onClick={onSync}
@@ -67,7 +67,7 @@ export default function PageHeader({ icon, title, subtitle, onSync, syncing, onR
           opacity: syncing ? 0.7 : 1, whiteSpace: 'nowrap',
         }}
       >
-        {syncing ? '⟳ Sync...' : <><i className="ti ti-bolt" /> Sincronizar</>}
+        {syncing ? <><i className="ti ti-refresh" /></> : <><i className="ti ti-bolt" /><span className="hdr-btn-text"> Sincronizar</span></>}
       </button>
     </header>
   );

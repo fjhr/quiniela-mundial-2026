@@ -48,12 +48,27 @@ body {
   .hdr-hamburger {
     display: flex !important;
   }
-  nav[class="sidebar"] {
-    position: fixed;
+  .sidebar {
     transform: translateX(-100%);
-    transition: transform 0.25s cubic-bezier(.4,0,.2,1);
+    transition: width 0.25s cubic-bezier(.4,0,.2,1),
+                transform 0.25s cubic-bezier(.4,0,.2,1) !important;
   }
-  nav[class="sidebar"].open {
+  .sidebar.open {
     transform: translateX(0);
+  }
+  /* Backdrop cuando drawer abierto */
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .45);
+    z-index: 99;
+  }
+  /* Contenido compacto */
+  .main-content {
+    padding: 12px !important;
+  }
+  /* Botones de header: solo icono */
+  .hdr-btn-text {
+    display: none;
   }
 }

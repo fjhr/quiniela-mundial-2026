@@ -54,7 +54,7 @@ export default function App() {
     setMatchTimes, applyESPNResults, applyKOUpdates,
     setKOTeamNames, setLastSync, restore, lastSync,
   } = useMatchStore();
-  const { activePanel, sidebarCollapsed, toastMessage, toastType, showToast } = useUiStore();
+  const { activePanel, sidebarCollapsed, toastMessage, toastType, showToast, toggleSidebar } = useUiStore();
   const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
@@ -110,6 +110,9 @@ export default function App() {
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       <Sidebar />
+      {isMobile && !sidebarCollapsed && (
+        <div className="sidebar-backdrop" onClick={toggleSidebar} />
+      )}
       <div style={{
         marginLeft: ml, flex: 1,
         display: 'flex', flexDirection: 'column',
@@ -125,9 +128,9 @@ export default function App() {
           onRestore={handleRestore}
           lastSync={lastSync}
         />
-        <main style={{
+        <main className="main-content" style={{
           flex: 1, overflowY: 'auto', overflowX: 'hidden',
-          padding: '20px', maxWidth: 960,
+          padding: '20px', maxWidth: 960, width: '100%',
         }}>
           <Suspense fallback={<Spinner />}>
             {PANEL_MAP[activePanel]}

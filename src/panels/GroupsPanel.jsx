@@ -35,8 +35,8 @@ export default function GroupsPanel() {
       </div>
 
       {/* Tabla de posiciones */}
-      <div style={{ background: 'var(--bg-800)', borderRadius: 'var(--r-md)', marginBottom: 20, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+      <div style={{ background: 'var(--bg-800)', borderRadius: 'var(--r-md)', marginBottom: 20, overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 320 }}>
           <thead>
             <tr style={{ background: 'var(--bg-700)', color: 'var(--text-400)' }}>
               <th style={{ padding: '8px 12px', textAlign: 'left' }}>#</th>

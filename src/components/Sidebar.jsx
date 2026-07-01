@@ -62,7 +62,10 @@ export default function Sidebar() {
     return (
       <button
         key={item.id}
-        onClick={() => setPanel(item.id)}
+        onClick={() => {
+          setPanel(item.id);
+          if (typeof window !== 'undefined' && window.innerWidth < 768 && !collapsed) toggleSidebar();
+        }}
         title={collapsed ? item.label : undefined}
         style={{
           display: 'flex', alignItems: 'center', gap: 8,
