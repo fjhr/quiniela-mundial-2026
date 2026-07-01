@@ -23,16 +23,16 @@ const QuinielaPanel  = React.lazy(() => import('./panels/QuinielaPanel.jsx'));
 const StatsPanel     = React.lazy(() => import('./panels/StatsPanel.jsx'));
 
 const PANEL_INFO = {
-  cal:       { title: '📅 Calendario',       subtitle: 'Partidos ordenados por fecha · filtra por fase o país sede' },
-  groups:    { title: '👥 Fase de Grupos',   subtitle: 'Tabla de posiciones y resultados por grupo' },
-  elim:      { title: '⚔️ Eliminatorias',    subtitle: 'Resultados de la fase eliminatoria' },
-  bracket:   { title: '🏆 Bracket R32',      subtitle: 'Cuadro completo desde 32avos' },
-  predictor: { title: '🎯 Predictor',        subtitle: 'Probabilidades Poisson por partido' },
-  h2h:       { title: '↔️ Head-to-Head',     subtitle: 'Comparación directa entre dos equipos' },
-  klement:   { title: '⭐ Klement',          subtitle: 'Ranking de forma actual' },
-  stats:     { title: '📊 Estadísticas',     subtitle: 'Resumen del torneo en números' },
-  quiniela:  { title: '📋 Quiniela',         subtitle: 'Tus predicciones y el pool de GolPredictor' },
-  escenarios:{ title: '🎲 Escenarios',       subtitle: 'Simulaciones Monte Carlo' },
+  cal:       { title: 'Calendario',       subtitle: 'Partidos ordenados por fecha · filtra por fase o país sede' },
+  groups:    { title: 'Fase de Grupos',   subtitle: 'Tabla de posiciones y resultados por grupo' },
+  elim:      { title: 'Eliminatorias',    subtitle: 'Resultados de la fase eliminatoria' },
+  bracket:   { title: 'Bracket R32',      subtitle: 'Cuadro completo desde 32avos' },
+  predictor: { title: 'Predictor',        subtitle: 'Probabilidades Poisson por partido' },
+  h2h:       { title: 'Head-to-Head',     subtitle: 'Comparación directa entre dos equipos' },
+  klement:   { title: 'Klement',          subtitle: 'Ranking de forma actual' },
+  stats:     { title: 'Estadísticas',     subtitle: 'Resumen del torneo en números' },
+  quiniela:  { title: 'Quiniela',         subtitle: 'Tus predicciones y el pool de GolPredictor' },
+  escenarios:{ title: 'Escenarios',       subtitle: 'Simulaciones Monte Carlo' },
 };
 
 const PANEL_MAP = {
@@ -96,8 +96,15 @@ export default function App() {
     return () => clearTimeout(t);
   }, []);
 
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   const { title, subtitle } = PANEL_INFO[activePanel] || {};
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   const ml = isMobile ? '0' : (sidebarCollapsed ? 'var(--sidebar-cw)' : 'var(--sidebar-w)');
 
   return (

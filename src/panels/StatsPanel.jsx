@@ -1,5 +1,4 @@
 import { useMatchStore } from '../store/matchStore.js';
-import { klem } from '../services/poisson.js';
 import teams from '../data/teams.json';
 import { Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
@@ -31,11 +30,16 @@ export default function StatsPanel() {
     .sort((a, b) => b.tot - a.tot)
     .slice(0, 6);
 
+  const rootStyle = typeof window !== 'undefined' ? getComputedStyle(document.documentElement) : null;
+  const colorGreen = rootStyle?.getPropertyValue('--green').trim() || '#16a34a';
+  const colorGray  = rootStyle?.getPropertyValue('--gray').trim()  || '#6b7280';
+  const colorRed   = rootStyle?.getPropertyValue('--red').trim()   || '#dc2626';
+
   const donutData = {
     labels: ['Victoria local', 'Empate', 'Victoria visitante'],
     datasets: [{
       data: [wins, draws, away],
-      backgroundColor: ['#16a34a', '#6b7280', '#dc2626'],
+      backgroundColor: [colorGreen, colorGray, colorRed],
       borderWidth: 0,
       hoverOffset: 5,
     }],

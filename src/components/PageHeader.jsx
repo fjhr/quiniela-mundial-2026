@@ -28,7 +28,7 @@ export default function PageHeader({ title, subtitle, onSync, syncing, onRestore
           color: 'var(--text-400)', fontSize: 17, alignItems: 'center', justifyContent: 'center',
         }}
         aria-label="Menú"
-      >☰</button>
+      ><i className="ti ti-menu-2" /></button>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-50)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {title}
@@ -53,7 +53,7 @@ export default function PageHeader({ title, subtitle, onSync, syncing, onRestore
           fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
         }}
       >
-        ↺ Restaurar
+        <><i className="ti ti-history" /> Restaurar</>
       </button>
       <button
         onClick={onSync}
@@ -66,7 +66,7 @@ export default function PageHeader({ title, subtitle, onSync, syncing, onRestore
           opacity: syncing ? 0.7 : 1, whiteSpace: 'nowrap',
         }}
       >
-        {syncing ? '⟳ Sync...' : '⚡ Sincronizar'}
+        {syncing ? '⟳ Sync...' : <><i className="ti ti-bolt" /> Sincronizar</>}
       </button>
     </header>
   );

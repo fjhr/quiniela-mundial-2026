@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useMatchStore } from '../store/matchStore.js';
 import { useUiStore } from '../store/uiStore.js';
 import { klem } from '../services/poisson.js';
@@ -8,26 +9,26 @@ const SECTIONS = [
   {
     label: 'TORNEO',
     items: [
-      { id: 'cal',     icon: '📅', label: 'Calendario' },
-      { id: 'groups',  icon: '👥', label: 'Fase de Grupos', hasGrid: true },
-      { id: 'elim',    icon: '⚔️', label: 'Eliminatorias' },
-      { id: 'bracket', icon: '🏆', label: 'Bracket R32' },
+      { id: 'cal',     icon: 'ti-calendar',      label: 'Calendario' },
+      { id: 'groups',  icon: 'ti-layout-grid',   label: 'Fase de Grupos', hasGrid: true },
+      { id: 'elim',    icon: 'ti-sitemap',        label: 'Eliminatorias' },
+      { id: 'bracket', icon: 'ti-tournament',     label: 'Bracket R32' },
     ],
   },
   {
     label: 'ANÁLISIS',
     items: [
-      { id: 'predictor', icon: '🎯', label: 'Predictor' },
-      { id: 'h2h',       icon: '↔️', label: 'Head-to-Head' },
-      { id: 'klement',   icon: '⭐', label: 'Klement' },
-      { id: 'stats',     icon: '📊', label: 'Estadísticas' },
+      { id: 'predictor', icon: 'ti-chart-radar',        label: 'Predictor' },
+      { id: 'h2h',       icon: 'ti-switch-horizontal',  label: 'Head-to-Head' },
+      { id: 'klement',   icon: 'ti-math-function',      label: 'Klement' },
+      { id: 'stats',     icon: 'ti-chart-bar',          label: 'Estadísticas' },
     ],
   },
   {
     label: 'SIMULACIÓN',
     items: [
-      { id: 'quiniela',   icon: '📋', label: 'Quiniela' },
-      { id: 'escenarios', icon: '🎲', label: 'Escenarios' },
+      { id: 'quiniela',   icon: 'ti-device-gamepad-2', label: 'Quiniela' },
+      { id: 'escenarios', icon: 'ti-calculator',       label: 'Escenarios' },
     ],
   },
 ];
@@ -53,7 +54,7 @@ export default function Sidebar() {
   const { res } = useMatchStore();
   const { activePanel, selectedGroup, sidebarCollapsed, setPanel, setGroup, toggleSidebar } = useUiStore();
 
-  const stats = calcStats(res);
+  const stats = useMemo(() => calcStats(res), [res]);
   const collapsed = sidebarCollapsed;
 
   const navBtn = (item) => {
@@ -77,7 +78,7 @@ export default function Sidebar() {
         onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'var(--bg-800)'; e.currentTarget.style.color = 'var(--text-200)'; }}}
         onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--text-400)'; }}}
       >
-        <span style={{ fontSize: 15, flexShrink: 0, lineHeight: 1 }}>{item.icon}</span>
+        <i className={`ti ${item.icon}`} style={{ fontSize: 16, flexShrink: 0, lineHeight: 1 }} />
         {!collapsed && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>}
       </button>
     );
@@ -99,7 +100,7 @@ export default function Sidebar() {
         display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0,
         minHeight: 58, justifyContent: collapsed ? 'center' : 'flex-start',
       }}>
-        <span style={{ fontSize: 22, flexShrink: 0 }}>🌍</span>
+        <span style={{ fontSize: 22, flexShrink: 0 }}>⚽</span>
         {!collapsed && (
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-50)', letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>
