@@ -20,7 +20,7 @@ export default function MatchCard({ match, teams, matchTimes, sched, pW, pD, pL,
       {/* Phase badge */}
       {phaseLabel && (
         <div style={{ marginBottom: 6 }}>
-          <span style={{
+          <span className="mc-phase" style={{
             fontSize: 10, fontWeight: 700, color: 'var(--text-500)',
             background: 'var(--bg-700)', borderRadius: 4, padding: '1px 6px',
             textTransform: 'uppercase', letterSpacing: '0.05em',
@@ -31,11 +31,11 @@ export default function MatchCard({ match, teams, matchTimes, sched, pW, pD, pL,
       )}
 
       {/* Match teams + score */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 8 }}>
+      <div className="mc-row" style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 8 }}>
         <TeamFlag team={match.h} teams={teams} style={{ justifyContent: 'flex-end' }} />
         <div style={{ textAlign: 'center' }}>
           <ScoreBadge hg={match.hg} ag={match.ag} played={match.p} pens={match.pens} />
-          {time && <div style={{ fontSize: 10, color: 'var(--blue-400)', marginTop: 2 }}>{time}</div>}
+          {time && <div className="mc-time" style={{ fontSize: 10, color: 'var(--blue-400)', marginTop: 2 }}>{time}</div>}
         </div>
         <TeamFlag team={match.a} teams={teams} />
       </div>
@@ -48,7 +48,7 @@ export default function MatchCard({ match, teams, matchTimes, sched, pW, pD, pL,
             <div style={{ width: `${pD * 100}%`, background: 'var(--gray)', flexShrink: 0 }} />
             <div style={{ width: `${pL * 100}%`, background: 'var(--red)', borderRadius: '0 3px 3px 0', flexShrink: 0 }} />
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 10, color: 'var(--text-500)' }}>
+          <div className="mc-probs" style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 10, color: 'var(--text-500)' }}>
             <span style={{ color: 'var(--green-400)', fontWeight: 600 }}>{(pW * 100).toFixed(1)}% local</span>
             <span>{(pD * 100).toFixed(1)}% emp.</span>
             <span style={{ color: 'var(--red-400)', fontWeight: 600 }}>{(pL * 100).toFixed(1)}% visita</span>
@@ -62,6 +62,7 @@ export default function MatchCard({ match, teams, matchTimes, sched, pW, pD, pL,
           {onPredict && (
             <button
               onClick={onPredict}
+              className="mc-action-btn"
               style={{
                 flex: 1, padding: '5px 8px', fontSize: 11, fontWeight: 600,
                 background: 'none', border: '1px solid var(--bg-600)',
@@ -77,6 +78,7 @@ export default function MatchCard({ match, teams, matchTimes, sched, pW, pD, pL,
           {onH2H && (
             <button
               onClick={onH2H}
+              className="mc-action-btn"
               style={{
                 flex: 1, padding: '5px 8px', fontSize: 11, fontWeight: 600,
                 background: 'none', border: '1px solid var(--bg-600)',

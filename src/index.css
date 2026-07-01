@@ -71,4 +71,18 @@ body {
   .hdr-btn-text {
     display: none;
   }
+
+  /* Tamaños de fuente más grandes en mobile */
+  body { font-size: 15px; }
+
+  .filter-btn {
+    font-size: 14px !important;
+    padding: 7px 14px !important;
+  }
+
+  .mc-row { gap: 12px !important; font-size: 15px; }
+  .mc-phase { font-size: 12px !important; padding: 3px 8px !important; }
+  .mc-time  { font-size: 12px !important; }
+  .mc-probs { font-size: 12px !important; margin-top: 6px !important; }
+  .mc-action-btn { font-size: 13px !important; padding: 8px !important; }
 }
