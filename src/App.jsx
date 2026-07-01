@@ -5,6 +5,7 @@ import { useUiStore } from './store/uiStore.js';
 import { fetchFromESPN, applyESPNTimes, syncKnockout, NAME_MAP } from './services/espn.js';
 import { resolveKOTeam } from './services/resolvers.js';
 import Sidebar from './components/Sidebar.jsx';
+import BottomNav from './components/BottomNav.jsx';
 import PageHeader from './components/PageHeader.jsx';
 import Toast from './components/Toast.jsx';
 import Spinner from './components/Spinner.jsx';
@@ -137,6 +138,7 @@ export default function App() {
           </Suspense>
         </main>
       </div>
+      <BottomNav />
       <Toast message={toastMessage} type={toastType} />
     </div>
   );

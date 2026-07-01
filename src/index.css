@@ -47,12 +47,16 @@ body {
 *::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb { background: var(--bg-700); border-radius: 3px; }
 
-/* Mobile: sidebar como drawer */
+/* Bottom nav — oculto por defecto en desktop */
+.bottom-nav { display: none; }
+
+/* Mobile */
 @media (max-width: 768px) {
   .hdr-hamburger {
     display: flex !important;
   }
   .sidebar {
+    z-index: 200 !important;
     transform: translateX(-100%);
     transition: width 0.25s cubic-bezier(.4,0,.2,1),
                 transform 0.25s cubic-bezier(.4,0,.2,1) !important;
@@ -60,16 +64,16 @@ body {
   .sidebar.open {
     transform: translateX(0);
   }
-  /* Backdrop cuando drawer abierto */
+  /* Backdrop: por encima del bottom nav, por debajo del sidebar */
   .sidebar-backdrop {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, .45);
-    z-index: 99;
+    z-index: 150;
   }
-  /* Contenido compacto */
+  /* Contenido compacto con espacio para el bottom nav */
   .main-content {
-    padding: 12px !important;
+    padding: 12px 12px calc(56px + env(safe-area-inset-bottom, 0px) + 12px) !important;
   }
   /* Botones de header: solo icono */
   .hdr-btn-text {
@@ -89,4 +93,31 @@ body {
   .mc-time  { font-size: 12px !important; }
   .mc-probs { font-size: 12px !important; margin-top: 6px !important; }
   .mc-action-btn { font-size: 13px !important; padding: 8px !important; }
+
+  /* Bottom nav */
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: calc(56px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: var(--bg-900);
+    border-top: 1px solid var(--bg-700);
+    z-index: 100;
+  }
+  .bottom-nav-btn {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 3px;
+    border: none; background: none; cursor: pointer;
+    color: var(--text-500); font-family: inherit;
+    font-size: 10px; font-weight: 500;
+    border-top: 2px solid transparent;
+    transition: color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .bottom-nav-btn i { font-size: 22px; }
+  .bottom-nav-btn.active {
+    color: var(--blue-400);
+    border-top-color: var(--blue);
+  }
 }
