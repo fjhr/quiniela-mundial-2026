@@ -17,10 +17,7 @@ function savePredictions(preds) {
   try { localStorage.setItem('quiniela-preds', JSON.stringify(preds)); } catch {}
 }
 function loadGpCreds() {
-  return {
-    cookie: localStorage.getItem('gp-cookie') || '',
-    user: localStorage.getItem('gp-user') || '',
-  };
+  return { cookie: localStorage.getItem('gp-cookie') || '', user: localStorage.getItem('gp-user') || '' };
 }
 function saveGpCreds(cookie, user) {
   try { localStorage.setItem('gp-cookie', cookie); localStorage.setItem('gp-user', user); } catch {}
@@ -29,7 +26,7 @@ function clearGpCreds() {
   try { localStorage.removeItem('gp-cookie'); localStorage.removeItem('gp-user'); } catch {}
 }
 
-// ── parseGPHtml — port del portal estático ───────────────────
+// ── parseGPHtml ───────────────────────────────────────────────
 function parseGPHtml(html) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
@@ -45,23 +42,85 @@ function parseGPHtml(html) {
     return ne.every(c => /^[\d\s.<>«»…\-]+$/.test(c) && c.trim().length <= 4);
   }
 
+  const titleEl = doc.querySelector('h1,h2,.titulo,.pool-name');
+  const poolName = titleEl ? titleEl.textContent.trim() : '';
   const headers = Array.from(mainTbl.rows[0].cells).map(c => c.textContent.trim());
-  const rows = [];
-  for (let i = 1; i < mainTbl.rows.length; i++) {
-    const cells = Array.from(mainTbl.rows[i].cells).map(c => c.textContent.trim());
-    if (cells.some(c => c !== '') && !isPager(cells)) rows.push(cells);
-  }
-  // Tablas adicionales de paginación
+  const rows = [], hrefs = [];
+
+  const addRow = (cells) => {
+    const texts = cells.map(c => c.textContent.trim());
+    if (texts.some(c => c !== '') && !isPager(texts)) {
+      rows.push(texts);
+      hrefs.push(cells.map(cell => {
+        const a = cell.querySelector('a');
+        return a ? a.getAttribute('href') : null;
+      }));
+    }
+  };
+
+  for (let i = 1; i < mainTbl.rows.length; i++)
+    addRow(Array.from(mainTbl.rows[i].cells));
+
   tables.forEach(tbl => {
     if (tbl === mainTbl || !tbl.rows.length) return;
     if (tbl.rows[0].cells.length !== colCount) return;
-    for (let i = 1; i < tbl.rows.length; i++) {
-      const cells = Array.from(tbl.rows[i].cells).map(c => c.textContent.trim());
-      if (cells.some(c => c !== '') && !isPager(cells)) rows.push(cells);
-    }
+    for (let i = 1; i < tbl.rows.length; i++) addRow(Array.from(tbl.rows[i].cells));
   });
 
-  return { headers, rows };
+  return { headers, rows, hrefs, poolName };
+}
+
+// ── parseGPStandings ─────────────────────────────────────────
+function parseGPStandings(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const tables = Array.from(doc.querySelectorAll('table'));
+  if (!tables.length) return null;
+
+  let standTbl = null;
+  for (const t of tables) {
+    if (t.rows.length < 3) continue;
+    const hdrs = Array.from(t.rows[0].cells)
+      .map(c => (c.textContent || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''))
+      .join(' ');
+    const hasName = /partic|jugad|usuari|nombre|apodo|player/.test(hdrs);
+    const hasPts  = /punt|ptos|pts|total|acum|score/.test(hdrs);
+    const noMatch = !/partido|match|horario/.test(hdrs);
+    const noPron  = !/pronostic|pred/.test(hdrs);
+    if (hasName && hasPts && noMatch && noPron) { standTbl = t; break; }
+  }
+  if (!standTbl) return null;
+
+  const headers = Array.from(standTbl.rows[0].cells).map(c => c.textContent.trim());
+  const rows = [];
+  for (let i = 1; i < standTbl.rows.length; i++) {
+    const cells = Array.from(standTbl.rows[i].cells).map(c => c.textContent.trim());
+    if (cells.some(c => c !== '')) rows.push(cells);
+  }
+  return headers.length && rows.length ? { headers, rows } : null;
+}
+
+// ── parseMatchPreds — pronósticos de todos para un partido ───
+function parseMatchPreds(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const tables = Array.from(doc.querySelectorAll('table'));
+  for (const t of tables) {
+    if (t.rows.length < 2) continue;
+    const hdrs = Array.from(t.rows[0].cells)
+      .map(c => c.textContent.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''))
+      .join(' ');
+    if (/partic|jugad|usuari|nombre|apodo/.test(hdrs)) {
+      const headers = Array.from(t.rows[0].cells).map(c => c.textContent.trim());
+      const rows = [];
+      for (let i = 1; i < t.rows.length; i++) {
+        const cells = Array.from(t.rows[i].cells).map(c => c.textContent.trim());
+        if (cells.some(c => c !== '')) rows.push(cells);
+      }
+      return headers.length && rows.length ? { headers, rows } : null;
+    }
+  }
+  return null;
 }
 
 // ── Tab 1: Mis Predicciones ───────────────────────────────────
@@ -113,18 +172,14 @@ function MisPredictionsTab({ res, resKO }) {
                   cursor: isPlayed ? 'default' : 'pointer', fontSize: 12,
                   background: pred === h ? 'var(--blue)' : 'var(--bg-700)',
                   color: pred === h ? '#fff' : 'var(--text-400)', fontWeight: pred === h ? 700 : 400,
-                }}>
-                  {teams[h]?.fl} {h}
-                </button>
+                }}>{teams[h]?.fl} {h}</button>
                 <span style={{ color: 'var(--text-500)', fontSize: 11 }}>vs</span>
                 <button onClick={() => !isPlayed && setPred(kb.id, a)} style={{
                   flex: 1, padding: '6px', borderRadius: 'var(--r-sm)', border: 'none',
                   cursor: isPlayed ? 'default' : 'pointer', fontSize: 12,
                   background: pred === a ? 'var(--blue)' : 'var(--bg-700)',
                   color: pred === a ? '#fff' : 'var(--text-400)', fontWeight: pred === a ? 700 : 400,
-                }}>
-                  {teams[a]?.fl} {a}
-                </button>
+                }}>{teams[a]?.fl} {a}</button>
               </div>
               {isPlayed && (
                 <div style={{ fontSize: 11, textAlign: 'center', marginTop: 6, color: isCorrect ? 'var(--green-400)' : 'var(--red-400)' }}>
@@ -139,78 +194,177 @@ function MisPredictionsTab({ res, resKO }) {
   );
 }
 
+// ── Render tabla genérica ─────────────────────────────────────
+function GpTable({ headers, rows, ptsIdx, highlightRow = -1, medals = false, onRowClick }) {
+  const MEDALS = ['🥇', '🥈', '🥉'];
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+        <thead>
+          <tr style={{ background: 'var(--bg-700)' }}>
+            {headers.map((h, i) => (
+              <th key={i} style={{
+                padding: '8px 10px', textAlign: i === ptsIdx ? 'right' : i === 0 ? 'center' : 'left',
+                fontWeight: 700, whiteSpace: 'nowrap',
+                color: i === ptsIdx ? 'var(--gold)' : 'var(--text-400)',
+              }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, ri) => {
+            const isMe = ri === highlightRow;
+            return (
+              <tr key={ri}
+                onClick={onRowClick ? () => onRowClick(ri, row) : undefined}
+                style={{
+                  borderTop: '1px solid var(--bg-700)',
+                  background: isMe ? 'rgba(37,99,235,.12)' : 'transparent',
+                  cursor: onRowClick ? 'pointer' : 'default',
+                }}>
+                {row.map((cell, ci) => (
+                  <td key={ci} style={{
+                    padding: '6px 10px',
+                    textAlign: ci === ptsIdx ? 'right' : ci === 0 ? 'center' : 'left',
+                    fontWeight: ci === ptsIdx || isMe ? 700 : 400,
+                    color: ci === ptsIdx ? 'var(--gold)' : isMe ? 'var(--text-50)' : 'var(--text-200)',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {medals && ci === 0 && ri < 3 ? MEDALS[ri] : cell}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 // ── Tab 2: GolPredictor ───────────────────────────────────────
 function GolPredictorTab() {
   const creds = loadGpCreds();
-  const [cookie, setCookie] = useState(creds.cookie);
-  const [gpUser, setGpUser] = useState(creds.user);
-  const [gpData, setGpData] = useState(null);
-  const [status, setStatus] = useState('idle');
-  const [error, setError] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [cookie, setCookie]         = useState(creds.cookie);
+  const [gpUser, setGpUser]         = useState(creds.user);
+  const [poolData, setPoolData]     = useState(null);
+  const [standings, setStandings]   = useState(null);
+  const [status, setStatus]         = useState('idle');
+  const [standStatus, setStandStatus] = useState('idle');
+  const [error, setError]           = useState('');
+  const [username, setUsername]     = useState('');
+  const [password, setPassword]     = useState('');
+  const [gpSubTab, setGpSubTab]     = useState('pron');
+  // expanded match detail
+  const [expandedIdx, setExpandedIdx] = useState(null);
+  const [matchDetail, setMatchDetail] = useState(null);
+  const [detailStatus, setDetailStatus] = useState('idle');
+
+  const handle401 = () => {
+    clearGpCreds(); setCookie(''); setGpUser('');
+    setPoolData(null); setStandings(null);
+    setStatus('idle'); setStandStatus('idle');
+    setError('Sesión expirada. Volvé a iniciar sesión.');
+  };
 
   const fetchPool = async (c) => {
-    setStatus('loading');
-    setError('');
+    setStatus('loading'); setError('');
     try {
-      const res = await fetch(`${GP_URL}/pool`, {
-        headers: { 'X-GP-Cookie': c, 'X-GP-Pid': GP_PID },
-      });
-      if (res.status === 401) {
-        clearGpCreds();
-        setCookie('');
-        setGpUser('');
-        setStatus('idle');
-        setError('Sesión expirada. Volvé a iniciar sesión.');
-        return;
-      }
+      const res = await fetch(`${GP_URL}/pool`, { headers: { 'X-GP-Cookie': c, 'X-GP-Pid': GP_PID } });
+      if (res.status === 401) { handle401(); return; }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const html = await res.text();
       const parsed = parseGPHtml(html);
       if (!parsed) { setError('No se pudo leer la tabla del pool.'); setStatus('error'); return; }
-      setGpData(parsed);
+      setPoolData(parsed);
       setStatus('done');
     } catch (e) {
-      setError(e.message || 'Error desconocido');
-      setStatus('error');
+      setError(e.message || 'Error desconocido'); setStatus('error');
+    }
+  };
+
+  const fetchStandings = async (c) => {
+    setStandStatus('loading');
+    try {
+      const res = await fetch(`${GP_URL}/standings`, { headers: { 'X-GP-Cookie': c || cookie, 'X-GP-Pid': GP_PID } });
+      if (res.status === 401) { handle401(); return; }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const html = await res.text();
+      const parsed = parseGPStandings(html);
+      if (!parsed) { setStandStatus('empty'); return; }
+      setStandings(parsed);
+      setStandStatus('done');
+    } catch (e) {
+      setStandStatus('error');
     }
   };
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setStatus('logging');
-    setError('');
+    e.preventDefault(); setStatus('logging'); setError('');
     try {
       const res = await fetch(`${GP_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
       if (!res.ok) throw new Error(`Login falló (HTTP ${res.status})`);
       const data = await res.json();
       if (!data.cookie) throw new Error('No se recibió cookie de sesión');
       saveGpCreds(data.cookie, data.username || username);
-      setCookie(data.cookie);
-      setGpUser(data.username || username);
-      setPassword('');
+      setCookie(data.cookie); setGpUser(data.username || username); setPassword('');
       await fetchPool(data.cookie);
     } catch (e) {
-      setError(e.message || 'Error de login');
-      setStatus('idle');
+      setError(e.message || 'Error de login'); setStatus('idle');
     }
   };
 
   const handleLogout = () => {
-    clearGpCreds();
-    setCookie('');
-    setGpUser('');
-    setGpData(null);
-    setStatus('idle');
-    setError('');
+    clearGpCreds(); setCookie(''); setGpUser('');
+    setPoolData(null); setStandings(null);
+    setStatus('idle'); setStandStatus('idle'); setError('');
+    setExpandedIdx(null); setMatchDetail(null);
   };
 
-  // Sin sesión → formulario de login
+  // Expand a row to show all predictions for that match via postback
+  const handleRowExpand = async (ri, row) => {
+    if (expandedIdx === ri) { setExpandedIdx(null); setMatchDetail(null); return; }
+    setExpandedIdx(ri); setMatchDetail(null); setDetailStatus('loading');
+
+    // Find match name from this row (look for partido column)
+    const { headers } = poolData;
+    let partidoIdx = headers.findIndex(h => /partido|match|encuentro/i.test(h));
+    if (partidoIdx < 0) partidoIdx = 2; // fallback: third column
+    const matchName = row[partidoIdx] || '';
+    const href = poolData.hrefs[ri]?.[partidoIdx] || null;
+
+    try {
+      let pbTarget = '', pbArg = '';
+      if (href) {
+        const m = href.match(/__doPostBack\(['"]([^'"]+)['"]\s*,\s*['"]([^'"]*)['"]\)/i);
+        if (m) { pbTarget = m[1]; pbArg = m[2]; }
+      }
+      const res = await fetch(`${GP_URL}/postback`, {
+        method: 'POST',
+        headers: { 'X-GP-Cookie': cookie, 'X-GP-Pid': GP_PID, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target: pbTarget, argument: pbArg, matchName }),
+      });
+      if (res.status === 401) { handle401(); return; }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const html = await res.text();
+      const detail = parseMatchPreds(html);
+      setMatchDetail(detail);
+      setDetailStatus('done');
+    } catch {
+      setDetailStatus('error');
+    }
+  };
+
+  // Switch to posiciones: auto-load if needed
+  const switchToPos = () => {
+    setGpSubTab('pos');
+    if (standStatus === 'idle') fetchStandings(cookie);
+  };
+
+  // ── Sin sesión → login ────────────────────────────────────
   if (!cookie) {
     return (
       <div style={{ maxWidth: 360 }}>
@@ -223,20 +377,12 @@ function GolPredictorTab() {
           </div>
         )}
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <input
-            type="text" placeholder="Usuario" value={username}
-            onChange={e => setUsername(e.target.value)} required
-            style={{ padding: '8px 10px', background: 'var(--bg-700)', border: '1px solid var(--bg-600)', borderRadius: 'var(--r-md)', color: 'var(--text-200)', fontSize: 13 }}
-          />
-          <input
-            type="password" placeholder="Contraseña" value={password}
-            onChange={e => setPassword(e.target.value)} required
-            style={{ padding: '8px 10px', background: 'var(--bg-700)', border: '1px solid var(--bg-600)', borderRadius: 'var(--r-md)', color: 'var(--text-200)', fontSize: 13 }}
-          />
-          <button type="submit" disabled={status === 'logging'} style={{
-            padding: '8px', background: 'var(--blue)', color: '#fff', border: 'none',
-            borderRadius: 'var(--r-md)', fontWeight: 600, cursor: 'pointer', fontSize: 13,
-          }}>
+          <input type="text" placeholder="Usuario" value={username} onChange={e => setUsername(e.target.value)} required
+            style={{ padding: '8px 10px', background: 'var(--bg-700)', border: '1px solid var(--bg-600)', borderRadius: 'var(--r-md)', color: 'var(--text-200)', fontSize: 13 }} />
+          <input type="password" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} required
+            style={{ padding: '8px 10px', background: 'var(--bg-700)', border: '1px solid var(--bg-600)', borderRadius: 'var(--r-md)', color: 'var(--text-200)', fontSize: 13 }} />
+          <button type="submit" disabled={status === 'logging'}
+            style={{ padding: '8px', background: 'var(--blue)', color: '#fff', border: 'none', borderRadius: 'var(--r-md)', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
             {status === 'logging' ? 'Iniciando sesión...' : 'Iniciar sesión'}
           </button>
         </form>
@@ -244,95 +390,189 @@ function GolPredictorTab() {
     );
   }
 
-  // Con sesión pero sin datos → cargar
-  if (!gpData && status !== 'loading' && status !== 'error') {
+  // Auto-load pool
+  if (!poolData && status !== 'loading' && status !== 'error') {
     fetchPool(cookie);
-    return <div style={{ color: 'var(--text-400)', padding: 20 }}>Cargando pool...</div>;
+    return <div style={{ color: 'var(--text-400)', padding: 20 }}>Cargando...</div>;
   }
+  if (status === 'loading') return <div style={{ color: 'var(--text-400)', padding: 20 }}>Cargando pool...</div>;
+  if (status === 'error') return (
+    <div>
+      <div style={{ color: 'var(--red-400)', marginBottom: 12 }}>{error}</div>
+      <button onClick={() => fetchPool(cookie)} style={{ padding: '6px 14px', background: 'var(--blue)', color: '#fff', border: 'none', borderRadius: 'var(--r-md)', cursor: 'pointer', fontSize: 13 }}>Reintentar</button>
+    </div>
+  );
 
-  if (status === 'loading') {
-    return <div style={{ color: 'var(--text-400)', padding: 20 }}>Cargando pool...</div>;
-  }
-
-  if (status === 'error') {
-    return (
-      <div>
-        <div style={{ color: 'var(--red-400)', marginBottom: 12 }}>{error}</div>
-        <button onClick={() => fetchPool(cookie)} style={{ padding: '6px 14px', background: 'var(--blue)', color: '#fff', border: 'none', borderRadius: 'var(--r-md)', cursor: 'pointer', fontSize: 13 }}>
-          Reintentar
-        </button>
-      </div>
-    );
-  }
-
-  // Tabla del pool
-  const { headers, rows } = gpData;
-  // Detectar columna de puntos por nombre
+  const { headers, rows } = poolData;
   let ptsIdx = headers.findIndex(h => /punt|ptos|pts|score|total|obten/i.test(h));
   if (ptsIdx === -1) ptsIdx = headers.length - 1;
+  let partidoIdx = headers.findIndex(h => /partido|match|encuentro/i.test(h));
+
+  // detect standings column indices
+  let sNameIdx = 1, sPtsIdx = -1;
+  if (standings) {
+    standings.headers.forEach((h, i) => {
+      const hn = h.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+      if (/partic|jugad|usuari|nombre|apodo/.test(hn)) sNameIdx = i;
+      if (sPtsIdx < 0 && /punt|ptos|pts|total|acum/i.test(hn)) sPtsIdx = i;
+    });
+    if (sPtsIdx < 0) sPtsIdx = standings.headers.length > 1 ? standings.headers.length - 1 : 1;
+  }
+
+  const subTabBtn = (id, label, onClick) => (
+    <button onClick={onClick || (() => setGpSubTab(id))} style={{
+      padding: '6px 14px', fontSize: 12, fontWeight: gpSubTab === id ? 700 : 500,
+      background: gpSubTab === id ? 'var(--blue)' : 'none',
+      color: gpSubTab === id ? '#fff' : 'var(--text-400)',
+      border: gpSubTab === id ? 'none' : '1px solid var(--bg-700)',
+      borderRadius: 'var(--r-md)', cursor: 'pointer',
+    }}>{label}</button>
+  );
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-        <span style={{ fontSize: 13, color: 'var(--text-400)' }}>Sesión: <strong style={{ color: 'var(--text-200)' }}>{gpUser}</strong></span>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 13, color: 'var(--text-400)' }}>
+          Sesión: <strong style={{ color: 'var(--text-200)' }}>{gpUser}</strong>
+        </span>
         <button onClick={() => fetchPool(cookie)} style={{
-          marginLeft: 'auto', padding: '5px 12px', background: 'var(--blue)', color: '#fff',
+          marginLeft: 'auto', padding: '5px 10px', background: 'var(--blue)', color: '#fff',
           border: 'none', borderRadius: 'var(--r-sm)', cursor: 'pointer', fontSize: 12, fontWeight: 600,
-        }}>↺ Actualizar</button>
+        }}>↺</button>
         <button onClick={handleLogout} style={{
-          padding: '5px 12px', background: 'none', color: 'var(--text-400)',
+          padding: '5px 10px', background: 'none', color: 'var(--text-400)',
           border: '1px solid var(--bg-600)', borderRadius: 'var(--r-sm)', cursor: 'pointer', fontSize: 12,
-        }}>Cerrar sesión</button>
+        }}>Salir</button>
       </div>
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-          <thead>
-            <tr style={{ background: 'var(--bg-700)', color: 'var(--text-400)' }}>
-              {headers.map((h, i) => (
-                <th key={i} style={{
-                  padding: '8px 10px', textAlign: i === ptsIdx ? 'center' : 'left',
-                  fontWeight: 700, whiteSpace: 'nowrap',
-                  color: i === ptsIdx ? 'var(--gold)' : 'var(--text-400)',
-                }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, ri) => (
-              <tr key={ri} style={{ borderTop: '1px solid var(--bg-700)' }}>
-                {row.map((cell, ci) => (
-                  <td key={ci} style={{
-                    padding: '6px 10px', textAlign: ci === ptsIdx ? 'center' : 'left',
-                    fontWeight: ci === ptsIdx ? 700 : 400,
-                    color: ci === ptsIdx ? 'var(--gold)' : 'var(--text-200)',
-                    whiteSpace: 'nowrap',
-                  }}>{cell}</td>
+
+      {/* Sub-tabs */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+        {subTabBtn('pron', `Pronósticos${poolData ? ` · ${rows.length} participantes` : ''}`)}
+        {subTabBtn('pos', 'Posiciones', switchToPos)}
+      </div>
+
+      {/* Pronósticos tab */}
+      {gpSubTab === 'pron' && (
+        <div>
+          {partidoIdx >= 0 && (
+            <p style={{ fontSize: 11, color: 'var(--text-500)', marginBottom: 8 }}>
+              Tocá una fila para ver los pronósticos de todos los participantes para ese partido.
+            </p>
+          )}
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+              <thead>
+                <tr style={{ background: 'var(--bg-700)' }}>
+                  {headers.map((h, i) => (
+                    <th key={i} style={{
+                      padding: '8px 10px', textAlign: i === ptsIdx ? 'right' : i === 0 ? 'center' : 'left',
+                      fontWeight: 700, whiteSpace: 'nowrap',
+                      color: i === ptsIdx ? 'var(--gold)' : 'var(--text-400)',
+                    }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row, ri) => (
+                  <>
+                    <tr key={ri}
+                      onClick={partidoIdx >= 0 ? () => handleRowExpand(ri, row) : undefined}
+                      style={{
+                        borderTop: '1px solid var(--bg-700)',
+                        background: expandedIdx === ri ? 'rgba(37,99,235,.1)' : 'transparent',
+                        cursor: partidoIdx >= 0 ? 'pointer' : 'default',
+                      }}>
+                      {row.map((cell, ci) => (
+                        <td key={ci} style={{
+                          padding: '6px 10px',
+                          textAlign: ci === ptsIdx ? 'right' : ci === 0 ? 'center' : 'left',
+                          fontWeight: ci === ptsIdx ? 700 : 400,
+                          color: ci === ptsIdx ? 'var(--gold)'
+                            : ci === partidoIdx ? 'var(--blue-400)'
+                            : 'var(--text-200)',
+                          whiteSpace: 'nowrap',
+                        }}>
+                          {ci === partidoIdx ? `${cell} ${expandedIdx === ri ? '▴' : '▾'}` : cell}
+                        </td>
+                      ))}
+                    </tr>
+                    {expandedIdx === ri && (
+                      <tr key={`det-${ri}`} style={{ background: 'var(--bg-800)' }}>
+                        <td colSpan={headers.length} style={{ padding: '10px 12px', borderTop: '2px solid var(--blue)' }}>
+                          {detailStatus === 'loading' && (
+                            <div style={{ color: 'var(--text-400)', fontSize: 12 }}>Cargando pronósticos...</div>
+                          )}
+                          {detailStatus === 'error' && (
+                            <div style={{ color: 'var(--red-400)', fontSize: 12 }}>No se pudieron cargar los pronósticos.</div>
+                          )}
+                          {detailStatus === 'done' && matchDetail && (
+                            <GpTable headers={matchDetail.headers} rows={matchDetail.rows} ptsIdx={-1} />
+                          )}
+                          {detailStatus === 'done' && !matchDetail && (
+                            <div style={{ color: 'var(--text-500)', fontSize: 12 }}>Sin datos para este partido.</div>
+                          )}
+                        </td>
+                      </tr>
+                    )}
+                  </>
                 ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+              </tbody>
+            </table>
+          </div>
+          <div style={{ textAlign: 'center', marginTop: 10, fontSize: 11, color: 'var(--text-500)' }}>
+            {rows.length} participantes
+          </div>
+        </div>
+      )}
+
+      {/* Posiciones tab */}
+      {gpSubTab === 'pos' && (
+        <div>
+          {standStatus === 'loading' && <div style={{ color: 'var(--text-400)', padding: 20 }}>Cargando posiciones...</div>}
+          {standStatus === 'error'   && (
+            <div>
+              <div style={{ color: 'var(--red-400)', marginBottom: 10 }}>No se pudo cargar la tabla de posiciones.</div>
+              <button onClick={() => fetchStandings()} style={{ padding: '6px 14px', background: 'var(--blue)', color: '#fff', border: 'none', borderRadius: 'var(--r-md)', cursor: 'pointer', fontSize: 13 }}>Reintentar</button>
+            </div>
+          )}
+          {standStatus === 'empty' && (
+            <div style={{ color: 'var(--text-400)', textAlign: 'center', padding: 30 }}>
+              No se encontró tabla de posiciones en este pool.
+            </div>
+          )}
+          {standStatus === 'done' && standings && (
+            <>
+              <GpTable
+                headers={standings.headers}
+                rows={standings.rows}
+                ptsIdx={sPtsIdx}
+                medals={true}
+              />
+              <div style={{ textAlign: 'center', marginTop: 10, fontSize: 11, color: 'var(--text-500)' }}>
+                {standings.rows.length} participantes
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-// ── Panel principal con tabs ──────────────────────────────────
+// ── Panel principal ───────────────────────────────────────────
 export default function QuinielaPanel() {
   const { res, resKO } = useMatchStore();
   const [tab, setTab] = useState('mis');
 
   const tabBtn = (id, label) => (
-    <button
-      onClick={() => setTab(id)}
-      style={{
-        padding: '8px 16px', fontSize: 13, fontWeight: tab === id ? 700 : 500,
-        background: tab === id ? 'var(--blue)' : 'none',
-        color: tab === id ? '#fff' : 'var(--text-400)',
-        border: tab === id ? 'none' : '1px solid var(--bg-700)',
-        borderRadius: 'var(--r-md)', cursor: 'pointer',
-      }}
-    >{label}</button>
+    <button onClick={() => setTab(id)} style={{
+      padding: '8px 16px', fontSize: 13, fontWeight: tab === id ? 700 : 500,
+      background: tab === id ? 'var(--blue)' : 'none',
+      color: tab === id ? '#fff' : 'var(--text-400)',
+      border: tab === id ? 'none' : '1px solid var(--bg-700)',
+      borderRadius: 'var(--r-md)', cursor: 'pointer',
+    }}>{label}</button>
   );
 
   return (

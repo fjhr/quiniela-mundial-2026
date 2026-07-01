@@ -1,4 +1,5 @@
 // src/panels/CalendarPanel.jsx
+import { useEffect, useRef } from 'react';
 import { useMatchStore } from '../store/matchStore.js';
 import { useUiStore } from '../store/uiStore.js';
 import MatchCard from '../components/MatchCard.jsx';
@@ -25,6 +26,7 @@ const FILTERS = [
 export default function CalendarPanel() {
   const { res, resKO, matchTimes } = useMatchStore();
   const { calFilter, setCalFilter, setPanel } = useUiStore();
+  const todayRef = useRef(null);
 
   const now = new Date();
   // Usar hora local para "hoy" — el usuario ve los partidos del día en su zona horaria
@@ -80,6 +82,13 @@ export default function CalendarPanel() {
   });
   const days = Object.keys(byDay).sort();
 
+  // Scroll al día de hoy al cargar (solo en modo 'all')
+  useEffect(() => {
+    if (calFilter === 'all' && todayRef.current) {
+      setTimeout(() => todayRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+  }, [calFilter]);
+
   const getProbs = (m) => {
     if (m.p) return {};
     if (!teams[m.h] || !teams[m.a]) return {};
@@ -96,7 +105,7 @@ export default function CalendarPanel() {
         const dm = byDay[dt];
         const playedCnt = dm.filter(m => m.p).length;
         return (
-          <div key={dt} style={{ marginBottom: 24 }}>
+          <div key={dt} ref={isToday ? todayRef : null} style={{ marginBottom: 24 }}>
             <div style={{
               display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10,
               paddingBottom: 6, borderBottom: '1px solid var(--bg-700)',
