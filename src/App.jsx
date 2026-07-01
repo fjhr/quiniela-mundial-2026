@@ -12,6 +12,7 @@ import Spinner from './components/Spinner.jsx';
 import CalendarPanel from './panels/CalendarPanel.jsx';
 import sched from './data/sched.json';
 import koBracket from './data/ko-bracket.json';
+import gr from './data/gr.json';
 
 const GroupsPanel    = React.lazy(() => import('./panels/GroupsPanel.jsx'));
 const EliminatoriaPanel = React.lazy(() => import('./panels/EliminatoriaPanel.jsx'));
@@ -59,8 +60,18 @@ export default function App() {
   const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
-    setKOTeamNames(koBracket, slot => resolveKOTeam(slot, res, resKO, koBracket));
+    setKOTeamNames(koBracket, slot => resolveKOTeam(slot, res, resKO, koBracket, gr));
   }, []);
+
+  // Recomputes resKO.h/a for every not-yet-played KO slot from the latest
+  // group/KO results, so newly-decided winners (e.g. group leaders filling
+  // Round of 32 slots, or R32 winners filling R16 slots) are visible right
+  // away in every module (Bracket, Calendar, Eliminatoria, Quiniela) and so
+  // syncKnockout can match upcoming ESPN fixtures by team name.
+  const refreshKOTeamNames = () => {
+    const { res: curRes, resKO: curResKO } = useMatchStore.getState();
+    setKOTeamNames(koBracket, slot => resolveKOTeam(slot, curRes, curResKO, koBracket, gr));
+  };
 
   const handleSync = async () => {
     setSyncing(true);
@@ -69,12 +80,27 @@ export default function App() {
       const { matchTimes: newTimes } = applyESPNTimes(events, sched);
       setMatchTimes({ ...matchTimes, ...newTimes });
       const count = applyESPNResults(events, NAME_MAP);
-      const koUpdates = syncKnockout(events, resKO);
-      applyKOUpdates(koUpdates);
+
+      // Cascade winners round by round: refresh slot names, pull any KO
+      // results ESPN now allows us to match, then refresh again so the
+      // next round's slots (which depend on the round just applied) can
+      // also resolve within the same sync.
+      let allKoUpdates = [];
+      for (let i = 0; i < koBracket.length; i++) {
+        refreshKOTeamNames();
+        const curResKO = useMatchStore.getState().resKO;
+        const newUpdates = syncKnockout(events, curResKO)
+          .filter(u => !allKoUpdates.some(x => x.id === u.id));
+        if (!newUpdates.length) break;
+        applyKOUpdates(newUpdates);
+        allKoUpdates = allKoUpdates.concat(newUpdates);
+      }
+      refreshKOTeamNames();
+
       setLastSync(new Date().toISOString());
       showToast(
-        count + koUpdates.length > 0
-          ? `${count + koUpdates.length} resultado(s) actualizado(s) · ESPN`
+        count + allKoUpdates.length > 0
+          ? `${count + allKoUpdates.length} resultado(s) actualizado(s) · ESPN`
           : 'Sin cambios · ESPN',
         'ok'
       );
