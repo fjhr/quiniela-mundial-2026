@@ -429,93 +429,112 @@ async function handleRequest(request) {
     var pageHtml = await pageResp.text();
     if (pageHtml.indexOf('login.aspx') >= 0 && pageHtml.indexOf('ReturnUrl') >= 0) return jsonResp({ error: 'auth' }, 401);
 
-    // Filtrar picks a solo inputs editables presentes en la página actual.
-    // Si enviamos valores para controles ausentes del VIEWSTATE, ASP.NET lanza excepción → Oooops.aspx.
-    var editableRe = /<input([^>]*)>/gi;
-    var editableNames = [];
-    var em;
-    while ((em = editableRe.exec(pageHtml)) !== null) {
-      var attrs = em[1];
-      if (/type=["']?(hidden|button|submit|reset|image)["']?/i.test(attrs)) continue;
-      var nm = (attrs.match(/name=["']([^"']+)["']/i) || [])[1];
-      if (nm) editableNames.push(nm);
-    }
-    var filteredPicks = {};
-    editableNames.forEach(function(name) {
-      if (picks[name] !== undefined) filteredPicks[name] = picks[name];
-    });
-    if (!Object.keys(filteredPicks).length) {
-      return jsonResp({ error: 'no-editable-inputs' }, 400);
-    }
-
-    // Fusionar picks filtrados con campos ocultos del form
-    var hidden = extractAllHidden(pageHtml);
-    Object.keys(filteredPicks).forEach(function(k) { hidden[k] = filteredPicks[k]; });
-    delete hidden['__SCROLLPOSITIONX'];
-    delete hidden['__SCROLLPOSITIONY'];
-
-    // Detectar botón submit (soporta type=image como butGuardar, y type=submit)
-    // type=image requiere enviar .x/.y en lugar del value del botón
-    var imgBtnMatch = pageHtml.match(/name="([^"]*(?:but|btn|Button|Btn)[^"]*)"\s[^>]*type=["']image["']/i)
-                   || pageHtml.match(/type=["']image["'][^>]*name="([^"]*(?:but|btn|Button|Btn)[^"]*)"/i);
-    if (imgBtnMatch) {
-      hidden[imgBtnMatch[1] + '.x'] = '1';
-      hidden[imgBtnMatch[1] + '.y'] = '1';
-    } else {
-      var btnMatch = pageHtml.match(/name="([^"]*(?:but|btn|Button|Btn)[^"]*)"/i);
-      if (btnMatch) {
-        hidden[btnMatch[1]] = '1';
-      } else {
-        return jsonResp({ error: 'no-submit-button' }, 502);
+    // Extraer nombres de inputs de texto editables de un HTML de página
+    function getEditableNames(html) {
+      var re = /<input([^>]*)>/gi, m, names = [];
+      while ((m = re.exec(html)) !== null) {
+        var a = m[1];
+        if (/type=["']?(hidden|button|submit|reset|image)["']?/i.test(a)) continue;
+        var nm = (a.match(/name=["']([^"']+)["']/i) || [])[1];
+        if (nm) names.push(nm);
       }
+      return names;
     }
 
-    var params = new URLSearchParams();
-    Object.keys(hidden).forEach(function(k) { params.append(k, hidden[k]); });
+    // Agregar botón guardar al mapa de campos ocultos
+    function addSaveButton(html, hidden) {
+      var imgM = html.match(/name="([^"]*(?:but|btn|Button|Btn)[^"]*)"\s[^>]*type=["']image["']/i)
+              || html.match(/type=["']image["'][^>]*name="([^"]*(?:but|btn|Button|Btn)[^"]*)"/i);
+      if (imgM) { hidden[imgM[1] + '.x'] = '1'; hidden[imgM[1] + '.y'] = '1'; return true; }
+      var btnM = html.match(/name="([^"]*(?:but|btn|Button|Btn)[^"]*)"/i);
+      if (btnM) { hidden[btnM[1]] = '1'; return true; }
+      return false;
+    }
 
-    var saveResp;
-    try {
-      saveResp = await fetch(gpUrl, {
-        method: 'POST', redirect: 'manual',
-        headers: Object.assign({}, commonHdrs, { 'Content-Type': 'application/x-www-form-urlencoded' }),
-        body: params.toString()
+    // Intentar guardar los picks que correspondan a inputs editables de esta página.
+    // Si no hay picks para esta página, retorna null (nada que hacer).
+    async function savePicksForPage(html) {
+      var filteredPicks = {};
+      getEditableNames(html).forEach(function(name) {
+        if (picks[name] !== undefined) filteredPicks[name] = picks[name];
       });
-    } catch (e) { return jsonResp({ error: 'network', message: e.message }, 502); }
+      if (!Object.keys(filteredPicks).length) return null;
 
-    // ASP.NET POST-redirect-GET: 302 es el resultado esperado al guardar exitosamente.
-    // Pero también redirige a login.aspx si la sesión expiró — verificar Location.
-    if (saveResp.status === 301 || saveResp.status === 302) {
-      var loc = saveResp.headers.get('Location') || '';
-      if (/login\.aspx/i.test(loc)) return jsonResp({ error: 'auth' }, 401);
-      // Seguir el redirect para verificar que la página destino no sea de error
-      var finalUrl = loc.startsWith('/') ? GP_BASE + loc : (loc || gpUrl);
-      var checkResp;
-      try { checkResp = await fetch(finalUrl, { redirect: 'manual', headers: commonHdrs }); }
-      catch (e) { return jsonResp({ ok: true, redirectTo: loc }); }
-      if (checkResp.status === 301 || checkResp.status === 302) {
-        var loc2 = checkResp.headers.get('Location') || '';
-        if (/login\.aspx/i.test(loc2)) return jsonResp({ error: 'auth' }, 401);
+      var hidden = extractAllHidden(html);
+      Object.keys(filteredPicks).forEach(function(k) { hidden[k] = filteredPicks[k]; });
+      delete hidden['__SCROLLPOSITIONX'];
+      delete hidden['__SCROLLPOSITIONY'];
+      if (!addSaveButton(html, hidden)) return { error: 'no-submit-button' };
+
+      var params = new URLSearchParams();
+      Object.keys(hidden).forEach(function(k) { params.append(k, hidden[k]); });
+      var sr;
+      try {
+        sr = await fetch(gpUrl, {
+          method: 'POST', redirect: 'manual',
+          headers: Object.assign({}, commonHdrs, { 'Content-Type': 'application/x-www-form-urlencoded' }),
+          body: params.toString()
+        });
+      } catch (e) { return { error: 'network', message: e.message }; }
+
+      if (sr.status === 301 || sr.status === 302) {
+        var loc = sr.headers.get('Location') || '';
+        if (/login\.aspx/i.test(loc)) return { error: 'auth' };
+        if (/Oooops/i.test(loc)) return { error: 'oooops', loc: loc };
+        return { ok: true };
       }
-      var checkHtml = await checkResp.text();
-      if (checkHtml.indexOf('login.aspx') >= 0 && checkHtml.indexOf('ReturnUrl') >= 0) {
+      if (sr.status !== 200) return { error: 'server', status: sr.status };
+      var rhtml = await sr.text();
+      if (rhtml.indexOf('login.aspx') >= 0 && rhtml.indexOf('ReturnUrl') >= 0) return { error: 'auth' };
+      return { ok: true };
+    }
+
+    // Iterar todas las páginas del GridView. El GridView está paginado: los picks pueden estar
+    // en cualquier página (p.ej. página 1 = partidos pasados sin inputs, páginas 2-4 = próximos).
+    var savedPages = 0, saveErrors = [], currentHtml = pageHtml, currentPage = 1;
+    var MAX_SAVE_PAGES = 6;
+
+    while (currentPage <= MAX_SAVE_PAGES) {
+      var pageResult = await savePicksForPage(currentHtml);
+      if (pageResult) {
+        if (pageResult.error === 'auth') return jsonResp({ error: 'auth' }, 401);
+        if (pageResult.ok) savedPages++;
+        else saveErrors.push(pageResult);
+      }
+
+      var pagerTarget = getPartidosPagerTarget(currentHtml);
+      var nextPageArg = getPartidosNextArg(currentHtml, currentPage);
+      if (!pagerTarget || !nextPageArg) break;
+
+      var pgHidden = extractAllHidden(currentHtml);
+      pgHidden['__EVENTTARGET']   = pagerTarget;
+      pgHidden['__EVENTARGUMENT'] = nextPageArg;
+      delete pgHidden['__SCROLLPOSITIONX'];
+      delete pgHidden['__SCROLLPOSITIONY'];
+      var pgParams = new URLSearchParams();
+      Object.keys(pgHidden).forEach(function(k) { pgParams.append(k, pgHidden[k]); });
+
+      var pgResp;
+      try {
+        pgResp = await fetch(gpUrl, {
+          method: 'POST', redirect: 'manual',
+          headers: Object.assign({}, commonHdrs, { 'Content-Type': 'application/x-www-form-urlencoded' }),
+          body: pgParams.toString()
+        });
+      } catch (e) { break; }
+      if (pgResp.status !== 200) break;
+      currentHtml = await pgResp.text();
+      if (currentHtml.indexOf('login.aspx') >= 0 && currentHtml.indexOf('ReturnUrl') >= 0) {
         return jsonResp({ error: 'auth' }, 401);
       }
-      return jsonResp({ ok: true, redirectTo: loc });
+      currentPage++;
     }
 
-    if (saveResp.status !== 200) {
-      return jsonResp({ error: 'server', status: saveResp.status }, 502);
+    if (!savedPages) {
+      if (saveErrors.length) return jsonResp({ error: saveErrors[0].error || 'save-failed', details: saveErrors[0] }, 502);
+      return jsonResp({ error: 'no-editable-inputs' }, 400);
     }
-
-    var resultHtml = await saveResp.text();
-    if (resultHtml.indexOf('login.aspx') >= 0 && resultHtml.indexOf('ReturnUrl') >= 0) {
-      return jsonResp({ error: 'auth' }, 401);
-    }
-
-    // Verificar mensajes de error típicos en la respuesta
-    var hasError = /class="[^"]*error[^"]*"|id="[^"]*error[^"]*"|alert-danger/i.test(resultHtml);
-    if (hasError) return jsonResp({ error: 'form-error', status: saveResp.status }, 400);
-    return jsonResp({ ok: true });
+    return jsonResp({ ok: true, pages: savedPages });
   }
 
   return jsonResp({ error: 'not-found' }, 404);
