@@ -6,8 +6,17 @@ const savedTheme = (() => {
 })();
 document.documentElement.setAttribute('data-theme', savedTheme);
 
+const VALID_PANELS = new Set([
+  'cal', 'groups', 'elim', 'bracket', 'predictor',
+  'h2h', 'klement', 'stats', 'quiniela', 'escenarios',
+]);
+const initPanel = (() => {
+  const p = new URLSearchParams(location.search).get('p');
+  return (p && VALID_PANELS.has(p)) ? p : 'cal';
+})();
+
 export const useUiStore = create((set) => ({
-  activePanel: 'cal',
+  activePanel: initPanel,
   calFilter: 'all',
   selectedGroup: 'A',
   koTab: 'R32',

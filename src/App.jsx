@@ -1,5 +1,5 @@
 // src/App.jsx
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useRef, useState, Suspense } from 'react';
 import { useMatchStore } from './store/matchStore.js';
 import { useUiStore } from './store/uiStore.js';
 import { fetchFromESPN, applyESPNTimes, syncKnockout, NAME_MAP } from './services/espn.js';
@@ -58,6 +58,7 @@ export default function App() {
   } = useMatchStore();
   const { activePanel, sidebarCollapsed, toastMessage, toastType, showToast, toggleSidebar } = useUiStore();
   const [syncing, setSyncing] = useState(false);
+  const isPop = useRef(false);
 
   useEffect(() => {
     setKOTeamNames(koBracket, slot => resolveKOTeam(slot, res, resKO, koBracket, gr));
@@ -137,6 +138,27 @@ export default function App() {
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
+
+  // Escuchar Back/Forward del browser y sincronizar el panel activo desde la URL
+  useEffect(() => {
+    const onPop = () => {
+      isPop.current = true;
+      const p = new URLSearchParams(location.search).get('p') || 'cal';
+      useUiStore.setState({ activePanel: p });
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
+  // Reflejar el panel activo en la URL (pushState) sin duplicar entradas al navegar con Back
+  useEffect(() => {
+    if (isPop.current) { isPop.current = false; return; }
+    const cur = new URLSearchParams(location.search).get('p');
+    const url = `${location.pathname}?p=${activePanel}`;
+    if (cur === activePanel) return;
+    if (!cur) history.replaceState({ panel: activePanel }, '', url);
+    else history.pushState({ panel: activePanel }, '', url);
+  }, [activePanel]);
 
   const { icon, title, subtitle } = PANEL_INFO[activePanel] || {};
   const ml = isMobile ? '0' : (sidebarCollapsed ? 'var(--sidebar-cw)' : 'var(--sidebar-w)');
