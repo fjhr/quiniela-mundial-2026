@@ -463,9 +463,25 @@ async function handleRequest(request) {
       });
     } catch (e) { return jsonResp({ error: 'network', message: e.message }, 502); }
 
-    // Redirección 302 = envío exitoso (patrón ASP.NET POST-redirect-GET)
+    // ASP.NET POST-redirect-GET: 302 es el resultado esperado al guardar exitosamente.
+    // Pero también redirige a login.aspx si la sesión expiró — verificar Location.
     if (saveResp.status === 301 || saveResp.status === 302) {
-      return jsonResp({ ok: true });
+      var loc = saveResp.headers.get('Location') || '';
+      if (/login\.aspx/i.test(loc)) return jsonResp({ error: 'auth' }, 401);
+      // Seguir el redirect para verificar que la página destino no sea de error
+      var finalUrl = loc.startsWith('/') ? GP_BASE + loc : (loc || gpUrl);
+      var checkResp;
+      try { checkResp = await fetch(finalUrl, { redirect: 'manual', headers: commonHdrs }); }
+      catch (e) { return jsonResp({ ok: true, redirectTo: loc }); }
+      if (checkResp.status === 301 || checkResp.status === 302) {
+        var loc2 = checkResp.headers.get('Location') || '';
+        if (/login\.aspx/i.test(loc2)) return jsonResp({ error: 'auth' }, 401);
+      }
+      var checkHtml = await checkResp.text();
+      if (checkHtml.indexOf('login.aspx') >= 0 && checkHtml.indexOf('ReturnUrl') >= 0) {
+        return jsonResp({ error: 'auth' }, 401);
+      }
+      return jsonResp({ ok: true, redirectTo: loc });
     }
 
     if (saveResp.status !== 200) {

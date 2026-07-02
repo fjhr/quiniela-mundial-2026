@@ -474,6 +474,7 @@ function GolPredictorTab() {
     // Fix 4: Guard saveStatus to prevent multiple saves
     if (!Object.keys(picks).length || saveStatus === 'saving') return;
     setSaveStatus('saving');
+    console.log('[GP save] picks enviados:', picks);
     try {
       const res = await fetch(`${GP_URL}/save-picks`, {
         method: 'POST',
@@ -486,6 +487,8 @@ function GolPredictorTab() {
       });
       if (res.status === 401) { setSaveStatus('idle'); handle401(); return; }
       const data = await res.json();
+      if (data.redirectTo) console.log('[GP save] redirect →', data.redirectTo);
+      if (data.error) console.warn('[GP save] error:', data.error, data);
       setSaveStatus(data.ok ? 'ok' : 'error');
       if (data.ok) {
         // Fix 3: Clear picks after successful save
