@@ -82,10 +82,12 @@ export default function CalendarPanel() {
   });
   const days = Object.keys(byDay).sort();
 
-  // Scroll al día de hoy al cargar (solo en modo 'all')
+  // Scroll al primer día con partidos pendientes (desde hoy) al cargar en modo 'all'
+  const firstUpcomingRef = useRef(null);
   useEffect(() => {
-    if (calFilter === 'all' && todayRef.current) {
-      setTimeout(() => todayRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    if (calFilter === 'all') {
+      const target = firstUpcomingRef.current || todayRef.current;
+      if (target) setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
     }
   }, [calFilter]);
 
@@ -99,13 +101,17 @@ export default function CalendarPanel() {
   return (
     <div>
       <FilterBar filters={FILTERS} active={calFilter} onChange={setCalFilter} />
-      {days.map(dt => {
+      {(() => {
+        let firstUpcomingAssigned = false;
+        return days.map(dt => {
         const d = new Date(dt + 'T12:00:00Z');
         const isToday = dt === today;
         const dm = byDay[dt];
         const playedCnt = dm.filter(m => m.p).length;
+        const hasUpcoming = playedCnt < dm.length && dt >= today;
+        const isFirstUpcoming = hasUpcoming && !firstUpcomingAssigned && (firstUpcomingAssigned = true);
         return (
-          <div key={dt} ref={isToday ? todayRef : null} style={{ marginBottom: 24 }}>
+          <div key={dt} ref={isToday ? todayRef : isFirstUpcoming ? firstUpcomingRef : null} style={{ marginBottom: 24 }}>
             <div style={{
               display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10,
               paddingBottom: 6, borderBottom: '1px solid var(--bg-700)',
@@ -144,7 +150,8 @@ export default function CalendarPanel() {
             </div>
           </div>
         );
-      })}
+        });
+      })()}
       {days.length === 0 && (
         <p style={{ color: 'var(--text-400)', textAlign: 'center', marginTop: 40 }}>
           No hay partidos para mostrar.
