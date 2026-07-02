@@ -429,9 +429,28 @@ async function handleRequest(request) {
     var pageHtml = await pageResp.text();
     if (pageHtml.indexOf('login.aspx') >= 0 && pageHtml.indexOf('ReturnUrl') >= 0) return jsonResp({ error: 'auth' }, 401);
 
-    // Fusionar picks con campos ocultos del form
+    // Filtrar picks a solo inputs editables presentes en la página actual.
+    // Si enviamos valores para controles ausentes del VIEWSTATE, ASP.NET lanza excepción → Oooops.aspx.
+    var editableRe = /<input([^>]*)>/gi;
+    var editableNames = [];
+    var em;
+    while ((em = editableRe.exec(pageHtml)) !== null) {
+      var attrs = em[1];
+      if (/type=["']?(hidden|button|submit|reset|image)["']?/i.test(attrs)) continue;
+      var nm = (attrs.match(/name=["']([^"']+)["']/i) || [])[1];
+      if (nm) editableNames.push(nm);
+    }
+    var filteredPicks = {};
+    editableNames.forEach(function(name) {
+      if (picks[name] !== undefined) filteredPicks[name] = picks[name];
+    });
+    if (!Object.keys(filteredPicks).length) {
+      return jsonResp({ error: 'no-editable-inputs' }, 400);
+    }
+
+    // Fusionar picks filtrados con campos ocultos del form
     var hidden = extractAllHidden(pageHtml);
-    Object.keys(picks).forEach(function(k) { hidden[k] = picks[k]; });
+    Object.keys(filteredPicks).forEach(function(k) { hidden[k] = filteredPicks[k]; });
     delete hidden['__SCROLLPOSITIONX'];
     delete hidden['__SCROLLPOSITIONY'];
 

@@ -487,8 +487,7 @@ function GolPredictorTab() {
       });
       if (res.status === 401) { setSaveStatus('idle'); handle401(); return; }
       const data = await res.json();
-      if (data.redirectTo) console.log('[GP save] redirect →', data.redirectTo);
-      if (data.error) console.warn('[GP save] error:', data.error, data);
+      if (data.error === 'no-editable-inputs') { setSaveStatus('no-editable-inputs'); return; }
       setSaveStatus(data.ok ? 'ok' : 'error');
       if (data.ok) {
         // Fix 3: Clear picks after successful save
@@ -796,6 +795,11 @@ function GolPredictorTab() {
                   {saveStatus === 'error' && (
                     <span style={{ fontSize: 12, color: 'var(--red-400)' }}>
                       ✗ No se pudo guardar — verificá los valores e intentá de nuevo
+                    </span>
+                  )}
+                  {saveStatus === 'no-editable-inputs' && (
+                    <span style={{ fontSize: 12, color: 'var(--text-400)' }}>
+                      ⏳ Partidos cerrados — no hay predicciones editables en este momento
                     </span>
                   )}
                 </div>
