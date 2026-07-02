@@ -67,19 +67,8 @@ export default function Sidebar() {
           if (typeof window !== 'undefined' && window.innerWidth < 768 && !collapsed) toggleSidebar();
         }}
         title={collapsed ? item.label : undefined}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          padding: collapsed ? '9px 0' : '7px 10px',
-          justifyContent: collapsed ? 'center' : 'flex-start',
-          borderRadius: 'var(--r-md)', border: 'none', width: '100%',
-          fontSize: 12.5, fontWeight: isActive ? 600 : 500,
-          cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
-          background: isActive ? 'var(--blue)' : 'none',
-          color: isActive ? '#fff' : 'var(--text-400)',
-          transition: 'all 0.15s',
-        }}
-        onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'var(--bg-800)'; e.currentTarget.style.color = 'var(--text-200)'; }}}
-        onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--text-400)'; }}}
+        className={`nav-item${isActive ? ' active' : ''}`}
+        style={collapsed ? { padding: '9px 0', justifyContent: 'center' } : undefined}
       >
         <i className={`ti ${item.icon}`} style={{ fontSize: 16, flexShrink: 0, lineHeight: 1 }} />
         {!collapsed && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>}
@@ -98,18 +87,19 @@ export default function Sidebar() {
     }}>
       {/* Logo header */}
       <div style={{
-        padding: collapsed ? '14px 0' : '14px 12px',
+        padding: collapsed ? '14px 0' : '12px 14px',
         borderBottom: '1px solid var(--bg-700)',
         display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0,
         minHeight: 58, justifyContent: collapsed ? 'center' : 'flex-start',
+        background: 'var(--bg-900)',
       }}>
-        <span style={{ fontSize: 22, flexShrink: 0 }}>⚽</span>
+        <span style={{ fontSize: 20, flexShrink: 0 }}>⚽</span>
         {!collapsed && (
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-50)', letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>
               Mundial FIFA 2026
             </div>
-            <div style={{ fontSize: 10, color: 'var(--text-400)', marginTop: 1, whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: 10, color: 'var(--text-500)', marginTop: 1, whiteSpace: 'nowrap' }}>
               Portal Predictivo
             </div>
           </div>
@@ -117,48 +107,49 @@ export default function Sidebar() {
         {!collapsed && (
           <button
             onClick={toggleSidebar}
-            style={{
-              marginLeft: 'auto', flexShrink: 0, background: 'none',
-              border: '1px solid var(--bg-700)', borderRadius: 'var(--r-sm)',
-              width: 26, height: 26, display: 'flex', alignItems: 'center',
-              justifyContent: 'center', cursor: 'pointer', color: 'var(--text-400)', fontSize: 13,
-            }}
+            className="btn-ghost"
+            style={{ padding: '5px 7px', fontSize: 13, flexShrink: 0 }}
             title="Colapsar sidebar"
-          >‹</button>
+          >
+            <i className="ti ti-chevrons-left" />
+          </button>
         )}
         {collapsed && (
           <button
             onClick={toggleSidebar}
             style={{
-              position: 'absolute', top: 16, right: 6,
-              background: 'none', border: '1px solid var(--bg-700)',
-              borderRadius: 'var(--r-sm)', width: 22, height: 22,
+              position: 'absolute', top: 16, right: 4,
+              background: 'none', border: 'none',
+              width: 22, height: 22,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', color: 'var(--text-400)', fontSize: 11,
+              cursor: 'pointer', color: 'var(--text-500)', fontSize: 14,
             }}
             title="Expandir sidebar"
-          >›</button>
+          >
+            <i className="ti ti-chevrons-right" />
+          </button>
         )}
       </div>
 
       {/* Nav sections */}
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '4px 8px' }}>
-        {SECTIONS.map(section => (
-          <div key={section.label}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '6px 8px' }}>
+        {SECTIONS.map((section, si) => (
+          <div key={section.label} style={{ marginTop: si > 0 ? 4 : 0 }}>
             {!collapsed && (
               <div style={{
                 fontSize: 9, fontWeight: 700, color: 'var(--text-600)',
-                textTransform: 'uppercase', letterSpacing: '0.08em',
-                padding: '10px 8px 4px', whiteSpace: 'nowrap',
+                textTransform: 'uppercase', letterSpacing: '0.1em',
+                padding: '10px 10px 4px', whiteSpace: 'nowrap',
               }}>
                 {section.label}
               </div>
             )}
-            {collapsed && <div style={{ height: 8 }} />}
+            {collapsed && si > 0 && (
+              <div style={{ height: 1, background: 'var(--bg-800)', margin: '6px 8px' }} />
+            )}
             {section.items.map(item => (
               <div key={item.id}>
                 {navBtn(item)}
-                {/* Grupo grid: solo bajo "Fase de Grupos" cuando no colapsado */}
                 {item.hasGrid && !collapsed && activePanel === 'groups' && (
                   <div style={{
                     display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
@@ -175,6 +166,7 @@ export default function Sidebar() {
                           fontSize: 11, fontWeight: 600,
                           color: selectedGroup === g ? '#fff' : 'var(--text-400)',
                           cursor: 'pointer', fontFamily: 'inherit',
+                          transition: 'all var(--transition)',
                         }}
                       >{g}</button>
                     ))}
@@ -189,7 +181,8 @@ export default function Sidebar() {
       {/* Stats footer */}
       {!collapsed && (
         <div style={{
-          padding: '12px 14px', borderTop: '1px solid var(--bg-700)', flexShrink: 0,
+          padding: '10px 14px 14px', borderTop: '1px solid var(--bg-700)',
+          background: 'var(--bg-900)', flexShrink: 0,
         }}>
           {[
             ['Partidos', stats.partidos],
@@ -197,8 +190,8 @@ export default function Sidebar() {
             ['G/P', stats.gpp],
             ['Favorito K.', `${teams[stats.favTeam]?.fl || ''} ${stats.favTeam}`],
           ].map(([label, value]) => (
-            <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0', fontSize: 11 }}>
-              <span style={{ color: 'var(--text-400)' }}>{label}</span>
+            <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', fontSize: 11 }}>
+              <span style={{ color: 'var(--text-500)' }}>{label}</span>
               <span style={{ color: 'var(--gold)', fontWeight: 600 }}>{value}</span>
             </div>
           ))}
