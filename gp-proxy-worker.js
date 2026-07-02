@@ -436,8 +436,12 @@ async function handleRequest(request) {
     delete hidden['__SCROLLPOSITIONY'];
 
     // Detectar y agregar botón submit (guardar/save/enviar)
-    var btnMatch = pageHtml.match(/name="([^"]*(?:btnGuardar|btnSave|btnEnviar|btnSubmit|btnSend|btnUpdate)[^"]*)"/i);
-    if (btnMatch) hidden[btnMatch[1]] = '1';
+    var btnMatch = pageHtml.match(/name="([^"]*(?:btn|Button|Btn)[^"]*)"/i);
+    if (btnMatch) {
+      hidden[btnMatch[1]] = '1';
+    } else {
+      return jsonResp({ error: 'no-submit-button' }, 502);
+    }
 
     var params = new URLSearchParams();
     Object.keys(hidden).forEach(function(k) { params.append(k, hidden[k]); });

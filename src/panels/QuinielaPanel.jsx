@@ -482,14 +482,16 @@ function GolPredictorTab() {
         },
         body: JSON.stringify({ picks }),
       });
-      if (res.status === 401) { handle401(); return; }
+      if (res.status === 401) { setSaveStatus('idle'); handle401(); return; }
       const data = await res.json();
       setSaveStatus(data.ok ? 'ok' : 'error');
       if (data.ok) {
         // Fix 3: Clear picks after successful save
         setPicks({});
-        setTimeout(() => setSaveStatus('idle'), 3000);
-        fetchPool(cookie);
+        setTimeout(() => {
+          setSaveStatus('idle');
+          fetchPool(cookie);
+        }, 3000);
       }
     } catch {
       setSaveStatus('error');
