@@ -136,7 +136,7 @@ export default function CalendarPanel() {
                     pW={probs.pW}
                     pD={probs.pD}
                     pL={probs.pL}
-                    onPredict={!m.p ? () => setPanel('predictor') : undefined}
+                    onPredict={!m.p ? () => setPanel('predictor', { h: m.h, a: m.a }) : undefined}
                     onH2H={!m.p ? () => setPanel('h2h') : undefined}
                   />
                 );

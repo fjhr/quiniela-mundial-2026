@@ -15,8 +15,12 @@ export const useUiStore = create((set) => ({
   theme: savedTheme,
   toastMessage: null,
   toastType: 'ok',
+  predH: null,
+  predA: null,
 
-  setPanel: (panel) => set({ activePanel: panel }),
+  setPanel: (panel, teams) => set(
+    teams ? { activePanel: panel, predH: teams.h, predA: teams.a } : { activePanel: panel }
+  ),
   setCalFilter: (filter) => set({ calFilter: filter }),
   setGroup: (group) => set({ selectedGroup: group }),
   setKoTab: (tab) => set({ koTab: tab }),
