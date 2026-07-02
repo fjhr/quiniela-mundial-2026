@@ -17,13 +17,42 @@ function poissonProb(k, lambda) {
   return r;
 }
 
+function getTopScorelines(lA, lB, n = 6) {
+  const scores = [];
+  for (let i = 0; i <= 5; i++) {
+    for (let j = 0; j <= 5; j++) {
+      scores.push({ h: i, a: j, p: poissonProb(i, lA) * poissonProb(j, lB) });
+    }
+  }
+  return scores.sort((a, b) => b.p - a.p).slice(0, n);
+}
+
+function getPOver25(lA, lB) {
+  let under = 0;
+  for (let i = 0; i <= 2; i++) {
+    for (let j = 0; j <= 2 - i; j++) {
+      under += poissonProb(i, lA) * poissonProb(j, lB);
+    }
+  }
+  return 1 - under;
+}
+
+function KpiCard({ value, label, color = 'var(--blue-400)' }) {
+  return (
+    <div className="card" style={{ padding: '12px 16px', textAlign: 'center', flex: 1 }}>
+      <div style={{ fontSize: 22, fontWeight: 800, color }}>{value}</div>
+      <div style={{ fontSize: 11, color: 'var(--text-400)', marginTop: 4 }}>{label}</div>
+    </div>
+  );
+}
+
 export default function PredictorPanel() {
   const [h, setH] = useState('Brasil');
   const [a, setA] = useState('Argentina');
 
   const pr = (teams[h] && teams[a]) ? sim(h, a, teams) : null;
 
-  const labels = ['0','1','2','3','4','5+'];
+  const labels = ['0', '1', '2', '3', '4', '5+'];
   const hProbs = pr ? labels.map((_, i) =>
     i < 5 ? poissonProb(i, pr.lA) : 1 - [0,1,2,3,4].reduce((s,j) => s + poissonProb(j, pr.lA), 0)
   ) : [];
@@ -34,10 +63,14 @@ export default function PredictorPanel() {
   const chartData = {
     labels,
     datasets: [
-      { label: h, data: hProbs.map(p => +(p*100).toFixed(1)), backgroundColor: 'rgba(37,99,235,.7)' },
-      { label: a, data: aProbs.map(p => +(p*100).toFixed(1)), backgroundColor: 'rgba(220,38,38,.7)' },
+      { label: h, data: hProbs.map(p => +(p * 100).toFixed(1)), backgroundColor: 'rgba(37,99,235,.7)' },
+      { label: a, data: aProbs.map(p => +(p * 100).toFixed(1)), backgroundColor: 'rgba(220,38,38,.7)' },
     ],
   };
+
+  const pBTTS = pr ? (1 - poissonProb(0, pr.lA)) * (1 - poissonProb(0, pr.lB)) : 0;
+  const pOver25 = pr ? getPOver25(pr.lA, pr.lB) : 0;
+  const top6 = pr ? getTopScorelines(pr.lA, pr.lB) : [];
 
   const select = (val, setter) => (
     <select value={val} onChange={e => setter(e.target.value)} style={{
@@ -48,35 +81,132 @@ export default function PredictorPanel() {
     </select>
   );
 
+  const SectionTitle = ({ children }) => (
+    <div style={{
+      fontSize: 11, fontWeight: 700, color: 'var(--text-500)',
+      textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12,
+    }}>
+      {children}
+    </div>
+  );
+
   return (
-    <div>
-      <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* Selectors */}
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
         {select(h, setH)}
         <span style={{ color: 'var(--text-400)' }}>vs</span>
         {select(a, setA)}
       </div>
+
       {pr && (
         <>
-          <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
-            {[
-              { label: `${h} gana`, pct: pr.pW },
-              { label: 'Empate', pct: pr.pD },
-              { label: `${a} gana`, pct: pr.pL },
-            ].map(x => (
-              <div key={x.label} style={{ background: 'var(--bg-800)', borderRadius: 'var(--r-md)', padding: '12px 16px', textAlign: 'center', flex: 1 }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--blue-400)' }}>{(x.pct * 100).toFixed(1)}%</div>
-                <div style={{ fontSize: 11, color: 'var(--text-400)', marginTop: 4 }}>{x.label}</div>
-              </div>
-            ))}
+          {/* Row 1: Win / Draw / Loss */}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <KpiCard value={`${(pr.pW * 100).toFixed(1)}%`} label={`${h} gana`} color="var(--blue-400)" />
+            <KpiCard value={`${(pr.pD * 100).toFixed(1)}%`} label="Empate" color="var(--text-400)" />
+            <KpiCard value={`${(pr.pL * 100).toFixed(1)}%`} label={`${a} gana`} color="var(--red-400)" />
           </div>
-          <Bar data={chartData} options={{
-            responsive: true,
-            plugins: { legend: { labels: { color: '#94a3b8' } } },
-            scales: {
-              y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
-              x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
-            },
-          }} />
+
+          {/* Row 2: xG + BTTS + Over 2.5 */}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <KpiCard value={pr.lA.toFixed(2)} label={`xG ${h}`} color="var(--blue-400)" />
+            <KpiCard value={pr.lB.toFixed(2)} label={`xG ${a}`} color="var(--red-400)" />
+            <KpiCard value={`${(pBTTS * 100).toFixed(1)}%`} label="Ambos anotan" color="var(--green-400)" />
+            <KpiCard value={`${(pOver25 * 100).toFixed(1)}%`} label="+2.5 goles" color="var(--gold)" />
+          </div>
+
+          {/* Top 6 scorelines */}
+          <div className="card" style={{ padding: '14px 16px' }}>
+            <SectionTitle>Resultados más probables</SectionTitle>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+              {top6.map(({ h: gh, a: ga, p }, idx) => {
+                const pct = (p * 100).toFixed(1);
+                const barColor = gh > ga ? 'var(--blue)' : gh === ga ? 'var(--gray)' : 'var(--red)';
+                const maxP = top6[0].p;
+                return (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 32, textAlign: 'center', fontWeight: 700, fontSize: 14, color: 'var(--text-50)', flexShrink: 0 }}>
+                      {gh}–{ga}
+                    </div>
+                    <div style={{ flex: 1, background: 'var(--bg-700)', borderRadius: 99, height: 6, overflow: 'hidden' }}>
+                      <div style={{ width: `${(p / maxP) * 100}%`, height: '100%', background: barColor, borderRadius: 99 }} />
+                    </div>
+                    <div style={{ width: 42, textAlign: 'right', fontSize: 12, color: 'var(--text-400)', flexShrink: 0 }}>
+                      {pct}%
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Goal distribution chart */}
+          <div className="card" style={{ padding: '14px 16px' }}>
+            <SectionTitle>Distribución de goles (Poisson)</SectionTitle>
+            <Bar data={chartData} options={{
+              responsive: true,
+              plugins: { legend: { labels: { color: '#94a3b8' } } },
+              scales: {
+                y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+              },
+            }} />
+          </div>
+
+          {/* Team comparison */}
+          <div className="card" style={{ padding: '14px 16px' }}>
+            <SectionTitle>Comparación de equipos</SectionTitle>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left', color: 'var(--text-500)', fontWeight: 600, paddingBottom: 10, paddingRight: 12, width: '40%' }}>
+                    Atributo
+                  </th>
+                  <th style={{ textAlign: 'center', color: 'var(--blue-400)', fontWeight: 700, paddingBottom: 10, paddingRight: 12 }}>
+                    {teams[h]?.fl} {h}
+                  </th>
+                  <th style={{ textAlign: 'center', color: 'var(--red-400)', fontWeight: 700, paddingBottom: 10 }}>
+                    {teams[a]?.fl} {a}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  {
+                    label: 'Klement',
+                    vH: pr.kA.toFixed(3),
+                    vA: pr.kB.toFixed(3),
+                    betterH: pr.kA >= pr.kB,
+                  },
+                  {
+                    label: 'FIFA Ranking',
+                    vH: `#${teams[h]?.r ?? '—'}`,
+                    vA: `#${teams[a]?.r ?? '—'}`,
+                    betterH: (teams[h]?.r ?? 999) <= (teams[a]?.r ?? 999),
+                  },
+                  {
+                    label: 'xG esperados',
+                    vH: pr.lA.toFixed(2),
+                    vA: pr.lB.toFixed(2),
+                    betterH: pr.lA >= pr.lB,
+                  },
+                ].map(({ label, vH, vA, betterH }) => (
+                  <tr key={label} style={{ borderTop: '1px solid var(--bg-700)' }}>
+                    <td style={{ padding: '8px 12px 8px 0', color: 'var(--text-400)' }}>{label}</td>
+                    <td style={{
+                      padding: '8px 12px 8px 0', textAlign: 'center', fontWeight: 700,
+                      color: betterH ? 'var(--text-50)' : 'var(--text-500)',
+                    }}>{vH}</td>
+                    <td style={{
+                      padding: '8px 0', textAlign: 'center', fontWeight: 700,
+                      color: !betterH ? 'var(--text-50)' : 'var(--text-500)',
+                    }}>{vA}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </>
       )}
     </div>
