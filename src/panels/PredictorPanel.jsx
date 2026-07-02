@@ -1,16 +1,12 @@
 // src/panels/PredictorPanel.jsx
-import { useState } from 'react';
-import { Bar } from 'react-chartjs-2';
-import {
-  Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend
-} from 'chart.js';
+import React, { useState, useEffect } from 'react';
 import { sim } from '../services/poisson.js';
 import { useMatchStore } from '../store/matchStore.js';
+import { useUiStore } from '../store/uiStore.js';
 import teams from '../data/teams.json';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
-
 const TEAM_LIST = Object.keys(teams).sort();
+const SCORE_LABELS = ['0', '1', '2', '3', '4', '5+'];
 
 function poissonProb(k, lambda) {
   let r = Math.exp(-lambda);
@@ -20,28 +16,43 @@ function poissonProb(k, lambda) {
 
 function getTopScorelines(lA, lB, n = 6) {
   const scores = [];
-  for (let i = 0; i <= 5; i++) {
-    for (let j = 0; j <= 5; j++) {
+  for (let i = 0; i <= 5; i++)
+    for (let j = 0; j <= 5; j++)
       scores.push({ h: i, a: j, p: poissonProb(i, lA) * poissonProb(j, lB) });
-    }
-  }
   return scores.sort((a, b) => b.p - a.p).slice(0, n);
 }
 
 function getPOver25(lA, lB) {
   let under = 0;
-  for (let i = 0; i <= 2; i++) {
-    for (let j = 0; j <= 2 - i; j++) {
+  for (let i = 0; i <= 2; i++)
+    for (let j = 0; j <= 2 - i; j++)
       under += poissonProb(i, lA) * poissonProb(j, lB);
+  return 1 - under;
+}
+
+function getHeatmapData(lA, lB) {
+  const dist = (l) => {
+    const p = Array.from({ length: 5 }, (_, k) => poissonProb(k, l));
+    p.push(Math.max(0, 1 - p.reduce((s, v) => s + v, 0)));
+    return p;
+  };
+  const pA = dist(lA);
+  const pB = dist(lB);
+  const cells = [];
+  let maxP = 0;
+  for (let i = 0; i < 6; i++) {
+    for (let j = 0; j < 6; j++) {
+      const p = pA[i] * pB[j];
+      if (p > maxP) maxP = p;
+      cells.push({ i, j, p, result: i > j ? 'h' : i < j ? 'a' : 'd' });
     }
   }
-  return 1 - under;
+  return { cells, maxP };
 }
 
 function getTournamentStats(team, res, resKO) {
   let gf = 0, ga = 0, played = 0;
   const form = [];
-
   res.forEach(m => {
     if (!m.p || m.hg == null) return;
     const isHome = m.h === team;
@@ -52,7 +63,6 @@ function getTournamentStats(team, res, resKO) {
     gf += tGF; ga += tGA; played++;
     form.push(tGF > tGA ? 'W' : tGF === tGA ? 'D' : 'L');
   });
-
   resKO.forEach(m => {
     if (!m.p || m.hg == null) return;
     if (!teams[m.h] || !teams[m.a]) return;
@@ -64,7 +74,6 @@ function getTournamentStats(team, res, resKO) {
     gf += tGF; ga += tGA; played++;
     form.push(tGF > tGA ? 'W' : tGF === tGA ? 'D' : 'L');
   });
-
   return { played, gf, ga, gd: gf - ga, form: form.slice(-5) };
 }
 
@@ -78,31 +87,23 @@ function KpiCard({ value, label, color = 'var(--blue-400)' }) {
 }
 
 export default function PredictorPanel() {
-  const [h, setH] = useState('Brasil');
-  const [a, setA] = useState('Argentina');
   const { res, resKO } = useMatchStore();
+  const { predH, predA } = useUiStore();
+
+  const [h, setH] = useState(predH || 'Brasil');
+  const [a, setA] = useState(predA || 'Argentina');
+
+  useEffect(() => {
+    if (predH && teams[predH]) setH(predH);
+    if (predA && teams[predA]) setA(predA);
+  }, [predH, predA]);
 
   const pr = (teams[h] && teams[a]) ? sim(h, a, teams) : null;
-
-  const labels = ['0', '1', '2', '3', '4', '5+'];
-  const hProbs = pr ? labels.map((_, i) =>
-    i < 5 ? poissonProb(i, pr.lA) : 1 - [0,1,2,3,4].reduce((s,j) => s + poissonProb(j, pr.lA), 0)
-  ) : [];
-  const aProbs = pr ? labels.map((_, i) =>
-    i < 5 ? poissonProb(i, pr.lB) : 1 - [0,1,2,3,4].reduce((s,j) => s + poissonProb(j, pr.lB), 0)
-  ) : [];
-
-  const chartData = {
-    labels,
-    datasets: [
-      { label: h, data: hProbs.map(p => +(p * 100).toFixed(1)), backgroundColor: 'rgba(37,99,235,.7)' },
-      { label: a, data: aProbs.map(p => +(p * 100).toFixed(1)), backgroundColor: 'rgba(220,38,38,.7)' },
-    ],
-  };
 
   const pBTTS = pr ? (1 - poissonProb(0, pr.lA)) * (1 - poissonProb(0, pr.lB)) : 0;
   const pOver25 = pr ? getPOver25(pr.lA, pr.lB) : 0;
   const top6 = pr ? getTopScorelines(pr.lA, pr.lB) : [];
+  const heatmap = pr ? getHeatmapData(pr.lA, pr.lB) : null;
 
   const statsH = getTournamentStats(h, res, resKO);
   const statsA = getTournamentStats(a, res, resKO);
@@ -176,17 +177,78 @@ export default function PredictorPanel() {
             </div>
           </div>
 
-          {/* Goal distribution chart */}
+          {/* Heat map 6×6 */}
           <div className="card" style={{ padding: '14px 16px' }}>
-            <SectionTitle>Distribución de goles (Poisson)</SectionTitle>
-            <Bar data={chartData} options={{
-              responsive: true,
-              plugins: { legend: { labels: { color: '#94a3b8' } } },
-              scales: {
-                y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
-                x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
-              },
-            }} />
+            <SectionTitle>Mapa de resultados</SectionTitle>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '28px repeat(6, 1fr)',
+              gap: 2,
+            }}>
+              {/* Header row */}
+              <div style={{ fontSize: 9, color: 'var(--text-500)', textAlign: 'right', paddingRight: 4, alignSelf: 'flex-end', paddingBottom: 4 }}>
+                L\V
+              </div>
+              {SCORE_LABELS.map(l => (
+                <div key={'ch-' + l} style={{
+                  textAlign: 'center', fontSize: 10, fontWeight: 700,
+                  color: 'var(--red-400)', paddingBottom: 4,
+                }}>
+                  {l}
+                </div>
+              ))}
+
+              {/* Data rows */}
+              {SCORE_LABELS.map((rowLabel, i) => (
+                <React.Fragment key={i}>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+                    paddingRight: 4, fontSize: 10, fontWeight: 700, color: 'var(--blue-400)',
+                  }}>
+                    {rowLabel}
+                  </div>
+                  {Array.from({ length: 6 }, (_, j) => {
+                    const cell = heatmap.cells[i * 6 + j];
+                    const rel = cell.p / heatmap.maxP;
+                    const alpha = 0.12 + rel * 0.78;
+                    const bg =
+                      cell.result === 'h' ? `rgba(37,99,235,${alpha})`
+                      : cell.result === 'a' ? `rgba(220,38,38,${alpha})`
+                      : `rgba(202,138,4,${alpha})`;
+                    return (
+                      <div key={j} style={{
+                        background: bg,
+                        borderRadius: 3,
+                        padding: '6px 1px',
+                        textAlign: 'center',
+                        fontSize: 9,
+                        fontWeight: rel > 0.4 ? 700 : 400,
+                        color: rel > 0.4 ? 'var(--text-50)' : 'var(--text-400)',
+                        lineHeight: 1.2,
+                      }}>
+                        {(cell.p * 100).toFixed(1)}
+                      </div>
+                    );
+                  })}
+                </React.Fragment>
+              ))}
+            </div>
+            {/* Legend */}
+            <div style={{ display: 'flex', gap: 14, marginTop: 10, fontSize: 10, color: 'var(--text-400)' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(37,99,235,0.7)', display: 'inline-block' }} />
+                {h} gana
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(202,138,4,0.7)', display: 'inline-block' }} />
+                Empate
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(220,38,38,0.7)', display: 'inline-block' }} />
+                {a} gana
+              </span>
+              <span style={{ marginLeft: 'auto', color: 'var(--text-500)' }}>valores en %</span>
+            </div>
           </div>
 
           {/* Team comparison */}
@@ -208,42 +270,25 @@ export default function PredictorPanel() {
               </thead>
               <tbody>
                 {[
-                  {
-                    label: 'Klement',
-                    vH: pr.kA.toFixed(3),
-                    vA: pr.kB.toFixed(3),
-                    betterH: pr.kA >= pr.kB,
-                  },
+                  { label: 'Klement', vH: pr.kA.toFixed(3), vA: pr.kB.toFixed(3), betterH: pr.kA >= pr.kB },
                   {
                     label: 'FIFA Ranking',
-                    vH: `#${teams[h]?.r ?? '—'}`,
-                    vA: `#${teams[a]?.r ?? '—'}`,
+                    vH: `#${teams[h]?.r ?? '—'}`, vA: `#${teams[a]?.r ?? '—'}`,
                     betterH: (teams[h]?.r ?? 999) <= (teams[a]?.r ?? 999),
                   },
-                  {
-                    label: 'xG esperados',
-                    vH: pr.lA.toFixed(2),
-                    vA: pr.lB.toFixed(2),
-                    betterH: pr.lA >= pr.lB,
-                  },
+                  { label: 'xG esperados', vH: pr.lA.toFixed(2), vA: pr.lB.toFixed(2), betterH: pr.lA >= pr.lB },
                 ].map(({ label, vH, vA, betterH }) => (
                   <tr key={label} style={{ borderTop: '1px solid var(--bg-700)' }}>
                     <td style={{ padding: '8px 12px 8px 0', color: 'var(--text-400)' }}>{label}</td>
-                    <td style={{
-                      padding: '8px 12px 8px 0', textAlign: 'center', fontWeight: 700,
-                      color: betterH ? 'var(--text-50)' : 'var(--text-500)',
-                    }}>{vH}</td>
-                    <td style={{
-                      padding: '8px 0', textAlign: 'center', fontWeight: 700,
-                      color: !betterH ? 'var(--text-50)' : 'var(--text-500)',
-                    }}>{vA}</td>
+                    <td style={{ padding: '8px 12px 8px 0', textAlign: 'center', fontWeight: 700, color: betterH ? 'var(--text-50)' : 'var(--text-500)' }}>{vH}</td>
+                    <td style={{ padding: '8px 0', textAlign: 'center', fontWeight: 700, color: !betterH ? 'var(--text-50)' : 'var(--text-500)' }}>{vA}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          {/* Tournament stats — conditionally rendered when any match played */}
+          {/* Tournament stats */}
           {(statsH.played > 0 || statsA.played > 0) && (
             <div className="card" style={{ padding: '14px 16px' }}>
               <SectionTitle>Estadísticas del torneo</SectionTitle>
@@ -253,10 +298,7 @@ export default function PredictorPanel() {
                   { tn: a, stats: statsA, color: 'var(--red-400)' },
                 ].map(({ tn, stats, color }) => (
                   <div key={tn}>
-                    <div style={{
-                      fontSize: 11, fontWeight: 700, color,
-                      textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8,
-                    }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>
                       {teams[tn]?.fl} {tn}
                     </div>
                     {stats.played === 0 ? (
