@@ -467,7 +467,8 @@ async function handleRequest(request) {
 
     // Verificar mensajes de error típicos en la respuesta
     var hasError = /class="[^"]*error[^"]*"|id="[^"]*error[^"]*"|alert-danger/i.test(resultHtml);
-    return jsonResp({ ok: !hasError, status: saveResp.status });
+    if (hasError) return jsonResp({ error: 'form-error', status: saveResp.status }, 400);
+    return jsonResp({ ok: true });
   }
 
   return jsonResp({ error: 'not-found' }, 404);
