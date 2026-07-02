@@ -402,6 +402,74 @@ async function handleRequest(request) {
     });
   }
 
+  // ── POST /save-picks ─────────────────────────────────────────
+  if (url.pathname === '/save-picks' && request.method === 'POST') {
+    var cookie = request.headers.get('X-GP-Cookie') || '';
+    var pid    = request.headers.get('X-GP-Pid')    || '';
+    if (!cookie || !pid) return jsonResp({ error: 'missing-params' }, 400);
+
+    var body;
+    try { body = await request.json(); } catch (e) { return jsonResp({ error: 'bad-request' }, 400); }
+    var picks = body.picks || {};
+    if (!Object.keys(picks).length) return jsonResp({ error: 'empty-picks' }, 400);
+
+    var gpUrl = GP_BASE + '/pooldetail.aspx?pid=' + encodeURIComponent(pid);
+    var commonHdrs = {
+      'Cookie': cookie, 'User-Agent': UA,
+      'Accept': 'text/html,application/xhtml+xml',
+      'Accept-Language': 'es-ES,es;q=0.9',
+      'Referer': gpUrl
+    };
+
+    // GET fresco para obtener tokens ASP.NET vigentes
+    var pageResp;
+    try { pageResp = await fetch(gpUrl, { redirect: 'manual', headers: commonHdrs }); }
+    catch (e) { return jsonResp({ error: 'network', message: e.message }, 502); }
+    if (pageResp.status === 301 || pageResp.status === 302) return jsonResp({ error: 'auth' }, 401);
+    var pageHtml = await pageResp.text();
+    if (pageHtml.indexOf('login.aspx') >= 0 && pageHtml.indexOf('ReturnUrl') >= 0) return jsonResp({ error: 'auth' }, 401);
+
+    // Fusionar picks con campos ocultos del form
+    var hidden = extractAllHidden(pageHtml);
+    Object.keys(picks).forEach(function(k) { hidden[k] = picks[k]; });
+    delete hidden['__SCROLLPOSITIONX'];
+    delete hidden['__SCROLLPOSITIONY'];
+
+    // Detectar y agregar botón submit (guardar/save/enviar)
+    var btnMatch = pageHtml.match(/name="([^"]*(?:btnGuardar|btnSave|btnEnviar|btnSubmit|btnSend|btnUpdate)[^"]*)"/i);
+    if (btnMatch) hidden[btnMatch[1]] = '1';
+
+    var params = new URLSearchParams();
+    Object.keys(hidden).forEach(function(k) { params.append(k, hidden[k]); });
+
+    var saveResp;
+    try {
+      saveResp = await fetch(gpUrl, {
+        method: 'POST', redirect: 'manual',
+        headers: Object.assign({}, commonHdrs, { 'Content-Type': 'application/x-www-form-urlencoded' }),
+        body: params.toString()
+      });
+    } catch (e) { return jsonResp({ error: 'network', message: e.message }, 502); }
+
+    // Redirección 302 = envío exitoso (patrón ASP.NET POST-redirect-GET)
+    if (saveResp.status === 301 || saveResp.status === 302) {
+      return jsonResp({ ok: true });
+    }
+
+    if (saveResp.status !== 200) {
+      return jsonResp({ error: 'server', status: saveResp.status }, 502);
+    }
+
+    var resultHtml = await saveResp.text();
+    if (resultHtml.indexOf('login.aspx') >= 0 && resultHtml.indexOf('ReturnUrl') >= 0) {
+      return jsonResp({ error: 'auth' }, 401);
+    }
+
+    // Verificar mensajes de error típicos en la respuesta
+    var hasError = /class="[^"]*error[^"]*"|id="[^"]*error[^"]*"|alert-danger/i.test(resultHtml);
+    return jsonResp({ ok: !hasError, status: saveResp.status });
+  }
+
   return jsonResp({ error: 'not-found' }, 404);
 }
 

@@ -34,7 +34,7 @@ function parseGPHtml(html) {
   const titleEl = doc.querySelector('h1,h2,.titulo,.pool-name');
   const poolName = titleEl ? titleEl.textContent.trim() : '';
   const headers = Array.from(mainTbl.rows[0].cells).map(c => c.textContent.trim());
-  const rows = [], hrefs = [];
+  const rows = [], hrefs = [], inputFields = [];
 
   const addRow = (cells) => {
     const texts = cells.map(c => c.textContent.trim());
@@ -43,6 +43,17 @@ function parseGPHtml(html) {
       hrefs.push(cells.map(cell => {
         const a = cell.querySelector('a');
         return a ? a.getAttribute('href') : null;
+      }));
+      inputFields.push(cells.map(cell => {
+        const inp = cell.querySelector(
+          'input:not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"])'
+        );
+        if (!inp) return null;
+        return {
+          name: inp.getAttribute('name') || inp.getAttribute('id') || '',
+          value: inp.value || '',
+          type: inp.getAttribute('type') || 'text',
+        };
       }));
     }
   };
@@ -56,7 +67,7 @@ function parseGPHtml(html) {
     for (let i = 1; i < tbl.rows.length; i++) addRow(Array.from(tbl.rows[i].cells));
   });
 
-  return { headers, rows, hrefs, poolName };
+  return { headers, rows, hrefs, poolName, inputFields };
 }
 
 // ── parseGPStandings ─────────────────────────────────────────
