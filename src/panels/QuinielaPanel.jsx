@@ -357,18 +357,28 @@ function GolPredictorTab() {
   const [saveStatus, setSaveStatus] = useState('idle');
   const [lastFetched, setLastFetched] = useState(null);
 
-  // Fix 2: Initialize picks from poolData.inputFields on load
+  // Sincronizar picks con inputFields del pool. Cada vez que el pool se refresca
+  // pueden aparecer nuevos partidos o cerrarse existentes:
+  // - Nuevos inputs (partidos nuevos) → se agregan con valor del servidor
+  // - Inputs eliminados (partidos cerrados) → se remueven de picks
+  // - Inputs existentes con edits del usuario → se preservan
   useEffect(() => {
     if (!poolData?.inputFields) return;
-    const initial = {};
+    const serverValues = {};
     poolData.inputFields.forEach(rowInputs => {
       rowInputs.forEach(cellInps => {
         if (cellInps) cellInps.forEach(inp => {
-          if (inp.name) initial[inp.name] = inp.value || '';
+          if (inp.name) serverValues[inp.name] = inp.value || '';
         });
       });
     });
-    setPicks(initial);
+    setPicks(prev => {
+      const next = { ...serverValues };
+      Object.keys(prev).forEach(k => {
+        if (next[k] !== undefined) next[k] = prev[k];
+      });
+      return next;
+    });
   }, [poolData?.inputFields]);
 
   const handle401 = () => {

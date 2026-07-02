@@ -492,7 +492,7 @@ async function handleRequest(request) {
     // Iterar todas las páginas del GridView. El GridView está paginado: los picks pueden estar
     // en cualquier página (p.ej. página 1 = partidos pasados sin inputs, páginas 2-4 = próximos).
     var savedPages = 0, saveErrors = [], currentHtml = pageHtml, currentPage = 1;
-    var MAX_SAVE_PAGES = 6;
+    var MAX_SAVE_PAGES = 50;
 
     while (currentPage <= MAX_SAVE_PAGES) {
       var pageResult = await savePicksForPage(currentHtml);
