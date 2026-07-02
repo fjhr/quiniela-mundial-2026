@@ -43,13 +43,13 @@ export default function MatchCard({ match, teams, matchTimes, sched, pW, pD, pL,
 
       {/* Probability bars */}
       {showProbs && (
-        <div className="mc-probs" style={{ marginTop: 8 }}>
+        <div style={{ marginTop: 8 }}>
           <div style={{ display: 'flex', height: 5, borderRadius: 99, overflow: 'hidden', gap: 1 }}>
             <div style={{ width: `${pW * 100}%`, background: 'var(--green)', borderRadius: '99px 0 0 99px', flexShrink: 0 }} />
             <div style={{ width: `${pD * 100}%`, background: 'var(--gray)', flexShrink: 0 }} />
             <div style={{ width: `${pL * 100}%`, background: 'var(--red)', borderRadius: '0 99px 99px 0', flexShrink: 0 }} />
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 10, color: 'var(--text-500)' }}>
+          <div className="mc-probs" style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 10, color: 'var(--text-500)' }}>
             <span style={{ color: 'var(--green-400)', fontWeight: 600 }}>{(pW * 100).toFixed(1)}% local</span>
             <span>{(pD * 100).toFixed(1)}% emp.</span>
             <span style={{ color: 'var(--red-400)', fontWeight: 600 }}>{(pL * 100).toFixed(1)}% visita</span>
