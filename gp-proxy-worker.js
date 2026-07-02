@@ -435,12 +435,20 @@ async function handleRequest(request) {
     delete hidden['__SCROLLPOSITIONX'];
     delete hidden['__SCROLLPOSITIONY'];
 
-    // Detectar y agregar botón submit (guardar/save/enviar)
-    var btnMatch = pageHtml.match(/name="([^"]*(?:btn|Button|Btn)[^"]*)"/i);
-    if (btnMatch) {
-      hidden[btnMatch[1]] = '1';
+    // Detectar botón submit (soporta type=image como butGuardar, y type=submit)
+    // type=image requiere enviar .x/.y en lugar del value del botón
+    var imgBtnMatch = pageHtml.match(/name="([^"]*(?:but|btn|Button|Btn)[^"]*)"\s[^>]*type=["']image["']/i)
+                   || pageHtml.match(/type=["']image["'][^>]*name="([^"]*(?:but|btn|Button|Btn)[^"]*)"/i);
+    if (imgBtnMatch) {
+      hidden[imgBtnMatch[1] + '.x'] = '1';
+      hidden[imgBtnMatch[1] + '.y'] = '1';
     } else {
-      return jsonResp({ error: 'no-submit-button' }, 502);
+      var btnMatch = pageHtml.match(/name="([^"]*(?:but|btn|Button|Btn)[^"]*)"/i);
+      if (btnMatch) {
+        hidden[btnMatch[1]] = '1';
+      } else {
+        return jsonResp({ error: 'no-submit-button' }, 502);
+      }
     }
 
     var params = new URLSearchParams();

@@ -45,15 +45,15 @@ function parseGPHtml(html) {
         return a ? a.getAttribute('href') : null;
       }));
       inputFields.push(cells.map(cell => {
-        const inp = cell.querySelector(
-          'input:not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"])'
-        );
-        if (!inp) return null;
-        return {
+        const inps = Array.from(cell.querySelectorAll(
+          'input:not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"])'
+        ));
+        if (!inps.length) return null;
+        return inps.map(inp => ({
           name: inp.getAttribute('name') || inp.getAttribute('id') || '',
           value: inp.value || '',
           type: inp.getAttribute('type') || 'text',
-        };
+        }));
       }));
     }
   };
@@ -362,8 +362,10 @@ function GolPredictorTab() {
     if (!poolData?.inputFields) return;
     const initial = {};
     poolData.inputFields.forEach(rowInputs => {
-      rowInputs.forEach(inp => {
-        if (inp && inp.name) initial[inp.name] = inp.value || '';
+      rowInputs.forEach(cellInps => {
+        if (cellInps) cellInps.forEach(inp => {
+          if (inp.name) initial[inp.name] = inp.value || '';
+        });
       });
     });
     setPicks(initial);
@@ -717,8 +719,8 @@ function GolPredictorTab() {
                   {editableRows.map(({ ri, rowInputs }) => {
                     const matchCell = partidoIdx >= 0 ? rows[ri][partidoIdx] : null;
                     const editableCells = rowInputs
-                      .map((inp, ci) => ({ ci, inp }))
-                      .filter(({ inp }) => inp && inp.name);
+                      .map((inps, ci) => ({ ci, inps }))
+                      .filter(({ inps }) => inps && inps.length > 0);
 
                     return (
                       <div key={ri} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -729,31 +731,36 @@ function GolPredictorTab() {
                           }}>{matchCell}</span>
                         )}
                         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                          {editableCells.map(({ ci, inp }) => (
-                            <div key={ci} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                              {editableCells.length > 1 && (
-                                <span style={{ fontSize: 9, color: 'var(--text-500)' }}>
-                                  {headers[ci] || `Campo ${ci + 1}`}
-                                </span>
-                              )}
-                              {/* Fix 1: Use value instead of defaultValue for controlled input */}
-                              <input
-                                type={inp.type === 'number' ? 'number' : 'text'}
-                                value={picks[inp.name] !== undefined ? picks[inp.name] : (inp.value ?? '')}
-                                onChange={e => setPicks(p => ({ ...p, [inp.name]: e.target.value }))}
-                                placeholder={inp.type === 'number' ? '0' : 'ej: 2-1'}
-                                aria-label={headers[ci] || inp.name || `Campo ${ci + 1}`}
-                                style={{
-                                  width: inp.type === 'number' ? 52 : 72,
-                                  padding: '6px 8px',
-                                  background: 'var(--bg-700)',
-                                  border: '1px solid var(--bg-600)',
-                                  borderRadius: 'var(--r-sm)',
-                                  color: 'var(--text-200)',
-                                  fontSize: 13,
-                                  textAlign: 'center',
-                                }}
-                              />
+                          {editableCells.map(({ ci, inps }) => (
+                            <div key={ci} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                              {inps.length === 2 ? (
+                                <>
+                                  <input
+                                    type="text"
+                                    value={picks[inps[0].name] !== undefined ? picks[inps[0].name] : (inps[0].value ?? '')}
+                                    onChange={e => setPicks(p => ({ ...p, [inps[0].name]: e.target.value }))}
+                                    aria-label="Goles local"
+                                    style={{ width: 44, padding: '6px 8px', background: 'var(--bg-700)', border: '1px solid var(--bg-600)', borderRadius: 'var(--r-sm)', color: 'var(--text-200)', fontSize: 14, textAlign: 'center' }}
+                                  />
+                                  <span style={{ color: 'var(--text-400)', fontWeight: 700 }}>-</span>
+                                  <input
+                                    type="text"
+                                    value={picks[inps[1].name] !== undefined ? picks[inps[1].name] : (inps[1].value ?? '')}
+                                    onChange={e => setPicks(p => ({ ...p, [inps[1].name]: e.target.value }))}
+                                    aria-label="Goles visitante"
+                                    style={{ width: 44, padding: '6px 8px', background: 'var(--bg-700)', border: '1px solid var(--bg-600)', borderRadius: 'var(--r-sm)', color: 'var(--text-200)', fontSize: 14, textAlign: 'center' }}
+                                  />
+                                </>
+                              ) : inps.map((inp, ii) => (
+                                <input
+                                  key={ii}
+                                  type="text"
+                                  value={picks[inp.name] !== undefined ? picks[inp.name] : (inp.value ?? '')}
+                                  onChange={e => setPicks(p => ({ ...p, [inp.name]: e.target.value }))}
+                                  aria-label={inp.name}
+                                  style={{ width: 52, padding: '6px 8px', background: 'var(--bg-700)', border: '1px solid var(--bg-600)', borderRadius: 'var(--r-sm)', color: 'var(--text-200)', fontSize: 14, textAlign: 'center' }}
+                                />
+                              ))}
                             </div>
                           ))}
                         </div>
