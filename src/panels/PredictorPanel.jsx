@@ -5,6 +5,7 @@ import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend
 } from 'chart.js';
 import { sim } from '../services/poisson.js';
+import { useMatchStore } from '../store/matchStore.js';
 import teams from '../data/teams.json';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -37,6 +38,36 @@ function getPOver25(lA, lB) {
   return 1 - under;
 }
 
+function getTournamentStats(team, res, resKO) {
+  let gf = 0, ga = 0, played = 0;
+  const form = [];
+
+  res.forEach(m => {
+    if (!m.p || m.hg == null) return;
+    const isHome = m.h === team;
+    const isAway = m.a === team;
+    if (!isHome && !isAway) return;
+    const tGF = isHome ? m.hg : m.ag;
+    const tGA = isHome ? m.ag : m.hg;
+    gf += tGF; ga += tGA; played++;
+    form.push(tGF > tGA ? 'W' : tGF === tGA ? 'D' : 'L');
+  });
+
+  resKO.forEach(m => {
+    if (!m.p || m.hg == null) return;
+    if (!teams[m.h] || !teams[m.a]) return;
+    const isHome = m.h === team;
+    const isAway = m.a === team;
+    if (!isHome && !isAway) return;
+    const tGF = isHome ? m.hg : m.ag;
+    const tGA = isHome ? m.ag : m.hg;
+    gf += tGF; ga += tGA; played++;
+    form.push(tGF > tGA ? 'W' : tGF === tGA ? 'D' : 'L');
+  });
+
+  return { played, gf, ga, gd: gf - ga, form: form.slice(-5) };
+}
+
 function KpiCard({ value, label, color = 'var(--blue-400)' }) {
   return (
     <div className="card" style={{ padding: '12px 16px', textAlign: 'center', flex: 1 }}>
@@ -49,6 +80,7 @@ function KpiCard({ value, label, color = 'var(--blue-400)' }) {
 export default function PredictorPanel() {
   const [h, setH] = useState('Brasil');
   const [a, setA] = useState('Argentina');
+  const { res, resKO } = useMatchStore();
 
   const pr = (teams[h] && teams[a]) ? sim(h, a, teams) : null;
 
@@ -71,6 +103,9 @@ export default function PredictorPanel() {
   const pBTTS = pr ? (1 - poissonProb(0, pr.lA)) * (1 - poissonProb(0, pr.lB)) : 0;
   const pOver25 = pr ? getPOver25(pr.lA, pr.lB) : 0;
   const top6 = pr ? getTopScorelines(pr.lA, pr.lB) : [];
+
+  const statsH = getTournamentStats(h, res, resKO);
+  const statsA = getTournamentStats(a, res, resKO);
 
   const select = (val, setter) => (
     <select value={val} onChange={e => setter(e.target.value)} style={{
@@ -207,6 +242,61 @@ export default function PredictorPanel() {
               </tbody>
             </table>
           </div>
+
+          {/* Tournament stats — conditionally rendered when any match played */}
+          {(statsH.played > 0 || statsA.played > 0) && (
+            <div className="card" style={{ padding: '14px 16px' }}>
+              <SectionTitle>Estadísticas del torneo</SectionTitle>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                {[
+                  { tn: h, stats: statsH, color: 'var(--blue-400)' },
+                  { tn: a, stats: statsA, color: 'var(--red-400)' },
+                ].map(({ tn, stats, color }) => (
+                  <div key={tn}>
+                    <div style={{
+                      fontSize: 11, fontWeight: 700, color,
+                      textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8,
+                    }}>
+                      {teams[tn]?.fl} {tn}
+                    </div>
+                    {stats.played === 0 ? (
+                      <div style={{ color: 'var(--text-500)', fontSize: 12 }}>Sin partidos</div>
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', gap: 14, marginBottom: 10 }}>
+                          {[
+                            { v: stats.played, l: 'PJ', c: 'var(--text-50)' },
+                            { v: stats.gf, l: 'GF', c: 'var(--green-400)' },
+                            { v: stats.ga, l: 'GC', c: 'var(--red-400)' },
+                            {
+                              v: (stats.gd > 0 ? '+' : '') + stats.gd, l: 'DG',
+                              c: stats.gd > 0 ? 'var(--gold)' : stats.gd < 0 ? 'var(--red-400)' : 'var(--text-400)',
+                            },
+                          ].map(({ v, l, c }) => (
+                            <div key={l} style={{ textAlign: 'center' }}>
+                              <div style={{ fontSize: 18, fontWeight: 800, color: c }}>{v}</div>
+                              <div style={{ fontSize: 10, color: 'var(--text-500)' }}>{l}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                          {stats.form.map((r, i) => (
+                            <span key={i} style={{
+                              width: 22, height: 22, borderRadius: '50%',
+                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: 10, fontWeight: 700,
+                              background: r === 'W' ? 'var(--green)' : r === 'D' ? 'var(--bg-600)' : 'var(--red)',
+                              color: '#fff',
+                            }}>{r}</span>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
