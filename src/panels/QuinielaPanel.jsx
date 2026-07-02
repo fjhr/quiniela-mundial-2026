@@ -353,6 +353,8 @@ function GolPredictorTab() {
   const [expandedIdx, setExpandedIdx] = useState(null);
   const [matchDetail, setMatchDetail] = useState(null);
   const [detailStatus, setDetailStatus] = useState('idle');
+  const [picks, setPicks]         = useState({});
+  const [saveStatus, setSaveStatus] = useState('idle');
   const [lastFetched, setLastFetched] = useState(null);
 
   const handle401 = () => {
@@ -451,6 +453,31 @@ function GolPredictorTab() {
       setDetailStatus('done');
     } catch {
       setDetailStatus('error');
+    }
+  };
+
+  const handleSavePicks = async () => {
+    if (!Object.keys(picks).length) return;
+    setSaveStatus('saving');
+    try {
+      const res = await fetch(`${GP_URL}/save-picks`, {
+        method: 'POST',
+        headers: {
+          'X-GP-Cookie': cookie,
+          'X-GP-Pid': GP_PID,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ picks }),
+      });
+      if (res.status === 401) { handle401(); return; }
+      const data = await res.json();
+      setSaveStatus(data.ok ? 'ok' : 'error');
+      if (data.ok) {
+        setTimeout(() => setSaveStatus('idle'), 3000);
+        fetchPool(cookie);
+      }
+    } catch {
+      setSaveStatus('error');
     }
   };
 
@@ -640,6 +667,111 @@ function GolPredictorTab() {
       {/* Pronósticos tab */}
       {gpSubTab === 'pron' && (
         <div>
+          {/* Sección "Mis predicciones pendientes" — solo si hay inputs editables */}
+          {(() => {
+            const { inputFields } = poolData;
+            if (!inputFields) return null;
+            // Encontrar filas con al menos un input editable
+            const editableRows = inputFields
+              .map((rowInputs, ri) => ({ ri, rowInputs }))
+              .filter(({ rowInputs }) => rowInputs.some(Boolean));
+            if (!editableRows.length) return null;
+
+            return (
+              <div style={{
+                marginBottom: 20, padding: '14px 14px 10px',
+                background: 'var(--bg-800)', borderRadius: 'var(--r-md)',
+                border: '1px solid var(--blue)',
+              }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--bg-700)',
+                }}>
+                  <span style={{ fontSize: 14 }}>🎯</span>
+                  <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-200)' }}>
+                    Mis predicciones pendientes
+                  </span>
+                  <span style={{ fontSize: 11, color: 'var(--text-500)' }}>
+                    · {editableRows.length} partido{editableRows.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {editableRows.map(({ ri, rowInputs }) => {
+                    const matchCell = partidoIdx >= 0 ? rows[ri][partidoIdx] : null;
+                    const editableCells = rowInputs
+                      .map((inp, ci) => ({ ci, inp }))
+                      .filter(({ inp }) => inp && inp.name);
+
+                    return (
+                      <div key={ri} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                        {matchCell && (
+                          <span style={{
+                            fontSize: 12, color: 'var(--blue-400)', fontWeight: 600,
+                            flex: '1 1 120px', minWidth: 100,
+                          }}>{matchCell}</span>
+                        )}
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                          {editableCells.map(({ ci, inp }) => (
+                            <div key={ci} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                              {editableCells.length > 1 && (
+                                <span style={{ fontSize: 9, color: 'var(--text-500)' }}>
+                                  {headers[ci] || `Campo ${ci + 1}`}
+                                </span>
+                              )}
+                              <input
+                                type={inp.type === 'number' ? 'number' : 'text'}
+                                defaultValue={picks[inp.name] !== undefined ? picks[inp.name] : inp.value}
+                                onChange={e => setPicks(p => ({ ...p, [inp.name]: e.target.value }))}
+                                placeholder={inp.type === 'number' ? '0' : 'ej: 2-1'}
+                                style={{
+                                  width: inp.type === 'number' ? 52 : 72,
+                                  padding: '6px 8px',
+                                  background: 'var(--bg-700)',
+                                  border: '1px solid var(--bg-600)',
+                                  borderRadius: 'var(--r-sm)',
+                                  color: 'var(--text-200)',
+                                  fontSize: 13,
+                                  textAlign: 'center',
+                                }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Botón guardar + feedback */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12 }}>
+                  <button
+                    onClick={handleSavePicks}
+                    disabled={saveStatus === 'saving' || !Object.keys(picks).length}
+                    style={{
+                      padding: '8px 18px', background: 'var(--blue)', color: '#fff',
+                      border: 'none', borderRadius: 'var(--r-md)', cursor: 'pointer',
+                      fontWeight: 700, fontSize: 13,
+                      opacity: (saveStatus === 'saving' || !Object.keys(picks).length) ? 0.6 : 1,
+                    }}
+                  >
+                    {saveStatus === 'saving' ? 'Guardando...' : 'Guardar predicciones'}
+                  </button>
+                  {saveStatus === 'ok' && (
+                    <span style={{ fontSize: 12, color: 'var(--green-400)', fontWeight: 600 }}>
+                      ✓ Predicciones guardadas
+                    </span>
+                  )}
+                  {saveStatus === 'error' && (
+                    <span style={{ fontSize: 12, color: 'var(--red-400)' }}>
+                      ✗ No se pudo guardar — verificá los valores e intentá de nuevo
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
           {partidoIdx >= 0 && (
             <p style={{ fontSize: 11, color: 'var(--text-500)', marginBottom: 8 }}>
               Tocá una fila para ver los pronósticos de todos los participantes para ese partido.
