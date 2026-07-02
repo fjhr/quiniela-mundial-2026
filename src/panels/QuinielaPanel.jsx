@@ -1,5 +1,5 @@
 // src/panels/QuinielaPanel.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const GP_URL = 'https://golpredictor.fernando-fjhr.workers.dev';
 const GP_PID = '0,b2bfbc17-41b4-43c6-a48a-6c2ad5baa31d';
@@ -357,6 +357,18 @@ function GolPredictorTab() {
   const [saveStatus, setSaveStatus] = useState('idle');
   const [lastFetched, setLastFetched] = useState(null);
 
+  // Fix 2: Initialize picks from poolData.inputFields on load
+  useEffect(() => {
+    if (!poolData?.inputFields) return;
+    const initial = {};
+    poolData.inputFields.forEach(rowInputs => {
+      rowInputs.forEach(inp => {
+        if (inp && inp.name) initial[inp.name] = inp.value || '';
+      });
+    });
+    setPicks(initial);
+  }, [poolData?.inputFields]);
+
   const handle401 = () => {
     clearGpCreds(); setCookie(''); setGpUser('');
     setPoolData(null); setStandings(null);
@@ -457,7 +469,8 @@ function GolPredictorTab() {
   };
 
   const handleSavePicks = async () => {
-    if (!Object.keys(picks).length) return;
+    // Fix 4: Guard saveStatus to prevent multiple saves
+    if (!Object.keys(picks).length || saveStatus === 'saving') return;
     setSaveStatus('saving');
     try {
       const res = await fetch(`${GP_URL}/save-picks`, {
@@ -473,6 +486,8 @@ function GolPredictorTab() {
       const data = await res.json();
       setSaveStatus(data.ok ? 'ok' : 'error');
       if (data.ok) {
+        // Fix 3: Clear picks after successful save
+        setPicks({});
         setTimeout(() => setSaveStatus('idle'), 3000);
         fetchPool(cookie);
       }
@@ -719,11 +734,13 @@ function GolPredictorTab() {
                                   {headers[ci] || `Campo ${ci + 1}`}
                                 </span>
                               )}
+                              {/* Fix 1: Use value instead of defaultValue for controlled input */}
                               <input
                                 type={inp.type === 'number' ? 'number' : 'text'}
-                                defaultValue={picks[inp.name] !== undefined ? picks[inp.name] : inp.value}
+                                value={picks[inp.name] !== undefined ? picks[inp.name] : (inp.value ?? '')}
                                 onChange={e => setPicks(p => ({ ...p, [inp.name]: e.target.value }))}
                                 placeholder={inp.type === 'number' ? '0' : 'ej: 2-1'}
+                                aria-label={headers[ci] || inp.name || `Campo ${ci + 1}`}
                                 style={{
                                   width: inp.type === 'number' ? 52 : 72,
                                   padding: '6px 8px',
@@ -745,12 +762,14 @@ function GolPredictorTab() {
 
                 {/* Botón guardar + feedback */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12 }}>
+                  {/* Fix 5: Cursor style reflects disabled state */}
                   <button
                     onClick={handleSavePicks}
                     disabled={saveStatus === 'saving' || !Object.keys(picks).length}
                     style={{
                       padding: '8px 18px', background: 'var(--blue)', color: '#fff',
-                      border: 'none', borderRadius: 'var(--r-md)', cursor: 'pointer',
+                      border: 'none', borderRadius: 'var(--r-md)',
+                      cursor: (saveStatus === 'saving' || !Object.keys(picks).length) ? 'not-allowed' : 'pointer',
                       fontWeight: 700, fontSize: 13,
                       opacity: (saveStatus === 'saving' || !Object.keys(picks).length) ? 0.6 : 1,
                     }}
