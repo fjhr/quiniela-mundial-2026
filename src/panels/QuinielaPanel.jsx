@@ -160,6 +160,171 @@ function GpTable({ headers, rows, ptsIdx, highlightRow = -1, medals = false, onR
   );
 }
 
+// ── StandingsView ────────────────────────────────────────────
+function StandingsView({ standings, nameIdx, ptsIdx, gpUser }) {
+  const [search, setSearch] = useState('');
+  const { headers, rows } = standings;
+
+  const norm = s => (s || '').toLowerCase().trim()
+    .normalize('NFD').replace(/\p{Diacritic}/gu, '');
+
+  const filtered = rows.filter(r =>
+    !search || norm(r[nameIdx]).includes(norm(search))
+  );
+
+  // Find user's absolute position (1-based) before search filtering
+  const userAbsIdx = rows.findIndex(r => norm(r[nameIdx]) === norm(gpUser));
+  const userPos = userAbsIdx >= 0 ? userAbsIdx + 1 : null;
+  const isMobile = window.innerWidth < 600;
+
+  const top3 = rows.slice(0, Math.min(3, rows.length));
+  const tableRows = search ? filtered : filtered.slice(3);
+
+  const MEDAL = ['🥇', '🥈', '🥉'];
+  const MEDAL_COLOR = ['var(--gold)', '#94a3b8', '#cd7f32'];
+  const MEDAL_BORDER = ['var(--gold)', 'var(--bg-600)', 'var(--bg-600)'];
+
+  return (
+    <div>
+      {/* Podio top 3 */}
+      {!search && top3.length > 0 && (
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+          {top3.map((row, i) => (
+            <div key={i} style={{
+              flex: '1 1 80px', minWidth: 72,
+              background: norm(row[nameIdx]) === norm(gpUser)
+                ? 'rgba(37,99,235,.12)' : 'var(--bg-800)',
+              borderRadius: 'var(--r-md)', padding: '12px 8px', textAlign: 'center',
+              border: `1px solid ${norm(row[nameIdx]) === norm(gpUser) ? 'var(--blue)' : MEDAL_BORDER[i]}`,
+            }}>
+              <div style={{ fontSize: 20, marginBottom: 4 }}>{MEDAL[i]}</div>
+              <div style={{
+                fontSize: 11, fontWeight: 700, color: 'var(--text-200)',
+                wordBreak: 'break-word', lineHeight: 1.3, marginBottom: 4,
+              }}>{row[nameIdx]}</div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: MEDAL_COLOR[i] }}>
+                {row[ptsIdx]}
+              </div>
+              <div style={{ fontSize: 10, color: 'var(--text-500)' }}>pts</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Tu posición badge */}
+      {userPos && !search && (
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 12,
+          background: 'rgba(37,99,235,.1)', borderRadius: 'var(--r-sm)',
+          padding: '5px 12px', border: '1px solid var(--blue)',
+          fontSize: 12,
+        }}>
+          <span style={{ color: 'var(--blue-400)' }}>📍</span>
+          <span style={{ color: 'var(--text-400)' }}>Tu posición:</span>
+          <span style={{ fontWeight: 800, color: 'var(--blue-400)', fontSize: 14 }}>#{userPos}</span>
+          <span style={{ color: 'var(--text-500)' }}>de {rows.length}</span>
+        </div>
+      )}
+
+      {/* Búsqueda */}
+      <input
+        type="text"
+        placeholder="Buscar participante..."
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        style={{
+          width: '100%', padding: '8px 10px', marginBottom: 10,
+          background: 'var(--bg-700)', border: '1px solid var(--bg-600)',
+          borderRadius: 'var(--r-md)', color: 'var(--text-200)',
+          fontSize: 13, boxSizing: 'border-box',
+        }}
+      />
+
+      {tableRows.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text-500)', fontSize: 13 }}>
+          No se encontraron participantes.
+        </div>
+      )}
+
+      {/* Vista móvil: tarjetas */}
+      {isMobile && tableRows.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {tableRows.map((row, ri) => {
+            const absPos = search ? rows.indexOf(row) + 1 : ri + (search ? 1 : 4);
+            const isMe = norm(row[nameIdx]) === norm(gpUser);
+            return (
+              <div key={ri} style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '10px 12px', borderRadius: 'var(--r-sm)',
+                background: isMe ? 'rgba(37,99,235,.1)' : 'var(--bg-800)',
+                border: `1px solid ${isMe ? 'var(--blue)' : 'var(--bg-700)'}`,
+              }}>
+                <span style={{
+                  minWidth: 28, textAlign: 'center', fontWeight: 700,
+                  color: 'var(--text-500)', fontSize: 13,
+                }}>#{absPos}</span>
+                <span style={{
+                  flex: 1, fontSize: 13, fontWeight: isMe ? 700 : 400,
+                  color: isMe ? 'var(--text-50)' : 'var(--text-200)',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>{row[nameIdx]}</span>
+                <span style={{
+                  fontWeight: 800, fontSize: 15, color: 'var(--gold)', minWidth: 36, textAlign: 'right',
+                }}>{row[ptsIdx]}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Vista desktop: tabla */}
+      {!isMobile && tableRows.length > 0 && (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr style={{ background: 'var(--bg-700)' }}>
+                {headers.map((h, i) => (
+                  <th key={i} style={{
+                    padding: '8px 10px',
+                    textAlign: i === ptsIdx ? 'right' : i === 0 ? 'center' : 'left',
+                    fontWeight: 700, whiteSpace: 'nowrap',
+                    color: i === ptsIdx ? 'var(--gold)' : 'var(--text-400)',
+                  }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {tableRows.map((row, ri) => {
+                const isMe = norm(row[nameIdx]) === norm(gpUser);
+                return (
+                  <tr key={ri} style={{
+                    borderTop: '1px solid var(--bg-700)',
+                    background: isMe ? 'rgba(37,99,235,.1)' : 'transparent',
+                  }}>
+                    {row.map((cell, ci) => (
+                      <td key={ci} style={{
+                        padding: '6px 10px',
+                        textAlign: ci === ptsIdx ? 'right' : ci === 0 ? 'center' : 'left',
+                        fontWeight: ci === ptsIdx || isMe ? 700 : 400,
+                        color: ci === ptsIdx ? 'var(--gold)' : isMe ? 'var(--text-50)' : 'var(--text-200)',
+                        whiteSpace: 'nowrap',
+                      }}>{cell}</td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div style={{ textAlign: 'center', marginTop: 10, fontSize: 11, color: 'var(--text-500)' }}>
+        {filtered.length} participante{filtered.length !== 1 ? 's' : ''}
+      </div>
+    </div>
+  );
+}
+
 // ── Tab 2: GolPredictor ───────────────────────────────────────
 function GolPredictorTab() {
   const creds = loadGpCreds();
@@ -460,17 +625,12 @@ function GolPredictorTab() {
             </div>
           )}
           {standStatus === 'done' && standings && (
-            <>
-              <GpTable
-                headers={standings.headers}
-                rows={standings.rows}
-                ptsIdx={sPtsIdx}
-                medals={true}
-              />
-              <div style={{ textAlign: 'center', marginTop: 10, fontSize: 11, color: 'var(--text-500)' }}>
-                {standings.rows.length} participantes
-              </div>
-            </>
+            <StandingsView
+              standings={standings}
+              nameIdx={sNameIdx}
+              ptsIdx={sPtsIdx >= 0 ? sPtsIdx : standings.headers.length - 1}
+              gpUser={gpUser}
+            />
           )}
         </div>
       )}
