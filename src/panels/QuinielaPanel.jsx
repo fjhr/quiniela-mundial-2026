@@ -342,6 +342,7 @@ function GolPredictorTab() {
   const [expandedIdx, setExpandedIdx] = useState(null);
   const [matchDetail, setMatchDetail] = useState(null);
   const [detailStatus, setDetailStatus] = useState('idle');
+  const [lastFetched, setLastFetched] = useState(null);
 
   const handle401 = () => {
     clearGpCreds(); setCookie(''); setGpUser('');
@@ -361,6 +362,7 @@ function GolPredictorTab() {
       if (!parsed) { setError('No se pudo leer la tabla del pool.'); setStatus('error'); return; }
       setPoolData(parsed);
       setStatus('done');
+      setLastFetched(new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }));
     } catch (e) {
       setError(e.message || 'Error desconocido'); setStatus('error');
     }
@@ -450,22 +452,55 @@ function GolPredictorTab() {
   // ── Sin sesión → login ────────────────────────────────────
   if (!cookie) {
     return (
-      <div style={{ maxWidth: 360 }}>
-        <p style={{ color: 'var(--text-400)', fontSize: 13, marginBottom: 16 }}>
-          Ingresá tus credenciales de golpredictor.com para ver la tabla del pool.
-        </p>
+      <div style={{ maxWidth: 400 }}>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <div style={{ fontSize: 40, marginBottom: 8 }}>🌐</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-200)', marginBottom: 6 }}>
+            GolPredictor Pool
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--text-400)' }}>
+            Ingresá tus credenciales de golpredictor.com para ver el pool.
+          </div>
+        </div>
+
         {error && (
-          <div style={{ color: 'var(--red-400)', fontSize: 12, marginBottom: 12, padding: '8px 12px', background: 'rgba(220,38,38,.1)', borderRadius: 'var(--r-sm)' }}>
+          <div style={{
+            color: 'var(--red-400)', fontSize: 13, marginBottom: 14,
+            padding: '10px 14px', background: 'rgba(220,38,38,.1)',
+            borderRadius: 'var(--r-sm)', borderLeft: '3px solid var(--red-400)',
+          }}>
             {error}
           </div>
         )}
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <input type="text" placeholder="Usuario" value={username} onChange={e => setUsername(e.target.value)} required
-            style={{ padding: '8px 10px', background: 'var(--bg-700)', border: '1px solid var(--bg-600)', borderRadius: 'var(--r-md)', color: 'var(--text-200)', fontSize: 13 }} />
-          <input type="password" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} required
-            style={{ padding: '8px 10px', background: 'var(--bg-700)', border: '1px solid var(--bg-600)', borderRadius: 'var(--r-md)', color: 'var(--text-200)', fontSize: 13 }} />
-          <button type="submit" disabled={status === 'logging'}
-            style={{ padding: '8px', background: 'var(--blue)', color: '#fff', border: 'none', borderRadius: 'var(--r-md)', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>
+
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <input
+            type="text" placeholder="Usuario" value={username}
+            onChange={e => setUsername(e.target.value)} required
+            style={{
+              padding: '12px 14px', background: 'var(--bg-700)',
+              border: '1px solid var(--bg-600)', borderRadius: 'var(--r-md)',
+              color: 'var(--text-200)', fontSize: 15,
+            }}
+          />
+          <input
+            type="password" placeholder="Contraseña" value={password}
+            onChange={e => setPassword(e.target.value)} required
+            style={{
+              padding: '12px 14px', background: 'var(--bg-700)',
+              border: '1px solid var(--bg-600)', borderRadius: 'var(--r-md)',
+              color: 'var(--text-200)', fontSize: 15,
+            }}
+          />
+          <button
+            type="submit" disabled={status === 'logging'}
+            style={{
+              padding: '13px', background: 'var(--blue)', color: '#fff',
+              border: 'none', borderRadius: 'var(--r-md)',
+              fontWeight: 700, cursor: 'pointer', fontSize: 15,
+              opacity: status === 'logging' ? 0.7 : 1, marginTop: 4,
+            }}
+          >
             {status === 'logging' ? 'Iniciando sesión...' : 'Iniciar sesión'}
           </button>
         </form>
@@ -516,18 +551,74 @@ function GolPredictorTab() {
     <div>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 13, color: 'var(--text-400)' }}>
-          Sesión: <strong style={{ color: 'var(--text-200)' }}>{gpUser}</strong>
-        </span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <span style={{ fontSize: 13, color: 'var(--text-400)' }}>
+            Sesión: <strong style={{ color: 'var(--text-200)' }}>{gpUser}</strong>
+          </span>
+          {lastFetched && (
+            <span style={{ fontSize: 10, color: 'var(--text-500)' }}>
+              Actualizado a las {lastFetched}
+            </span>
+          )}
+        </div>
         <button onClick={() => fetchPool(cookie)} style={{
-          marginLeft: 'auto', padding: '5px 10px', background: 'var(--blue)', color: '#fff',
+          marginLeft: 'auto', padding: '6px 12px', background: 'var(--blue)', color: '#fff',
           border: 'none', borderRadius: 'var(--r-sm)', cursor: 'pointer', fontSize: 12, fontWeight: 600,
-        }}>↺</button>
+        }}>↺ Refrescar</button>
         <button onClick={handleLogout} style={{
-          padding: '5px 10px', background: 'none', color: 'var(--text-400)',
+          padding: '6px 12px', background: 'none', color: 'var(--text-400)',
           border: '1px solid var(--bg-600)', borderRadius: 'var(--r-sm)', cursor: 'pointer', fontSize: 12,
         }}>Salir</button>
       </div>
+
+      {/* Pool KPI banner — visible cuando hay standings */}
+      {standStatus === 'done' && standings && (() => {
+        const norm = s => (s || '').toLowerCase().trim()
+          .normalize('NFD').replace(/\p{Diacritic}/gu, '');
+        const userIdx = standings.rows.findIndex(r =>
+          norm(r[sNameIdx]) === norm(gpUser)
+        );
+        const leader = standings.rows[0];
+        const kpis = [
+          {
+            icon: '👥',
+            value: standings.rows.length,
+            label: 'participantes',
+          },
+          leader ? {
+            icon: '🏆',
+            value: leader[sNameIdx],
+            label: `${leader[sPtsIdx >= 0 ? sPtsIdx : standings.headers.length - 1]} pts`,
+          } : null,
+          userIdx >= 0 ? {
+            icon: '📍',
+            value: `#${userIdx + 1}`,
+            label: 'tu posición',
+            highlight: true,
+          } : null,
+        ].filter(Boolean);
+
+        return (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
+            {kpis.map((kpi, i) => (
+              <div key={i} style={{
+                flex: '1 1 70px', minWidth: 70,
+                background: kpi.highlight ? 'rgba(37,99,235,.1)' : 'var(--bg-800)',
+                border: `1px solid ${kpi.highlight ? 'var(--blue)' : 'var(--bg-700)'}`,
+                borderRadius: 'var(--r-md)', padding: '10px 10px', textAlign: 'center',
+              }}>
+                <div style={{ fontSize: 16, marginBottom: 2 }}>{kpi.icon}</div>
+                <div style={{
+                  fontSize: 14, fontWeight: 800,
+                  color: kpi.highlight ? 'var(--blue-400)' : 'var(--text-200)',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>{kpi.value}</div>
+                <div style={{ fontSize: 10, color: 'var(--text-500)', marginTop: 1 }}>{kpi.label}</div>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
 
       {/* Sub-tabs */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
@@ -542,6 +633,13 @@ function GolPredictorTab() {
             <p style={{ fontSize: 11, color: 'var(--text-500)', marginBottom: 8 }}>
               Tocá una fila para ver los pronósticos de todos los participantes para ese partido.
             </p>
+          )}
+          {window.innerWidth < 600 && (
+            <div style={{
+              fontSize: 10, color: 'var(--text-500)', marginBottom: 6, textAlign: 'right',
+            }}>
+              ← deslizá horizontalmente para ver más →
+            </div>
           )}
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
@@ -576,7 +674,9 @@ function GolPredictorTab() {
                             : 'var(--text-200)',
                           whiteSpace: 'nowrap',
                         }}>
-                          {ci === partidoIdx ? `${cell} ${expandedIdx === ri ? '▴' : '▾'}` : cell}
+                          {ci === partidoIdx
+                            ? <span>{cell}&nbsp;<span style={{ color: 'var(--blue-400)', fontWeight: 700 }}>{expandedIdx === ri ? '▼' : '▶'}</span></span>
+                            : cell}
                         </td>
                       ))}
                     </tr>
